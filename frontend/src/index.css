@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Brand Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Manrope", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom Brand Colors */
+  --color-copper: #B5671A;
+  --color-pure-white: #FFFFFF;
+  --color-pure-black: #111111;
+  --color-hairline: #EAEAEA;
+  
+  --color-surface: #F9F9F9;
+  --color-surface-dim: #DADADA;
+  --color-surface-bright: #F9F9F9;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F3F3F4;
+  --color-surface-container: #EEEEEE;
+  --color-surface-container-high: #E8E8E8;
+  --color-surface-container-highest: #E2E2E2;
+  
+  --color-on-surface: #1A1C1C;
+  --color-on-surface-variant: #544438;
+  --color-inverse-surface: #2F3131;
+  --color-inverse-on-surface: #F0F1F1;
+  
+  --color-outline: #877366;
+  --color-outline-variant: #D9C2B2;
+  --color-surface-tint: #914D00;
+  
+  --color-primary: #8D4B00;
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #AE6113;
+  --color-on-primary-container: #FFFBFB;
+  --color-inverse-primary: #FFB77D;
+  
+  --color-secondary: #5F5E5E;
+  --color-on-secondary: #FFFFFF;
+  --color-secondary-container: #E5E2E1;
+  --color-on-secondary-container: #656464;
+  
+  --color-tertiary: #5C5C5C;
+  --color-on-tertiary: #FFFFFF;
+  --color-tertiary-container: #757474;
+  --color-on-tertiary-container: #FEFCFC;
+  
+  --color-error: #BA1A1A;
+  --color-on-error: #FFFFFF;
+  --color-error-container: #FFDAD6;
+  --color-on-error-container: #93000A;
+
+  --color-primary-fixed: #FFDCC3;
+  --color-primary-fixed-dim: #FFB77D;
+  --color-on-primary-fixed: #2F1500;
+  --color-on-primary-fixed-variant: #6E3900;
+
+  --color-secondary-fixed: #E5E2E1;
+  --color-secondary-fixed-dim: #C8C6C5;
+  --color-on-secondary-fixed: #1C1B1B;
+  --color-on-secondary-fixed-variant: #474646;
+
+  --color-tertiary-fixed: #E4E2E2;
+  --color-tertiary-fixed-dim: #C7C6C6;
+  --color-on-tertiary-fixed: #1B1C1C;
+  --color-on-tertiary-fixed-variant: #464747;
+
+  --color-background: #F9F9F9;
+  --color-on-background: #1A1C1C;
+  --color-surface-variant: #E2E2E2;
+
+  /* Custom Spacings */
+  --spacing-margin-desktop: 64px;
+  --spacing-margin-mobile: 20px;
+  --spacing-gutter: 24px;
+  --spacing-unit: 8px;
+  --spacing-container-max: 1280px;
+  --spacing-section-gap: 120px;
+
+  /* Custom Transitions */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer utilities {
+  /* Soft Elevation Shadow */
+  .soft-elevation {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #EAEAEA;
+  }
+
+  /* Tactile Interactive Lift */
+  .interactive-lift {
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  
+  .interactive-lift:hover {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Premium Buttons */
+  .btn-primary {
+    background-color: #B5671A; /* Copper */
+    color: #FFFFFF;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .btn-primary:hover {
+    background-color: #935313;
+    transform: scale(1.02);
+    box-shadow: 0 8px 30px rgba(181, 103, 26, 0.25);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    background-color: #FFFFFF;
+    color: #111111;
+    border: 1.5px solid #111111;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .btn-secondary:hover {
+    background-color: #111111;
+    color: #FFFFFF;
+    box-shadow: 0 8px 30px rgba(17, 17, 17, 0.1);
+  }
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Base resets & styles for accessibility and dark mode toggle speed */
+html {
+  scroll-behavior: smooth;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom modern scrollbar for luxury brand aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F9F9F9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C7C6C6;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #444444;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #877366;
+}
+
