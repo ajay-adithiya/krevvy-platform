@@ -5,10 +5,11 @@ import Logo from './Logo';
 interface FooterProps {
   setActiveView: (view: ActiveView) => void;
   onBuyClick: () => void;
+  darkMode: boolean;
 }
 
-export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
-  
+export default function Footer({ setActiveView, onBuyClick, darkMode }: FooterProps) {
+
   const handleNavClick = (view: ActiveView) => {
     setActiveView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -17,21 +18,21 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
   return (
     <footer className="bg-surface dark:bg-[#0a0a0a] border-t border-hairline dark:border-neutral-900 transition-colors duration-500 py-16 px-6 md:px-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
-        
+
         {/* Brand/Signature column */}
         <div className="md:col-span-4 flex flex-col items-start gap-4 text-left">
-          <button 
+          <button
             onClick={() => handleNavClick('home')}
             className="p-1 rounded focus:outline-none focus:ring-2 focus:ring-copper/30"
             aria-label="Krevvy Home"
           >
-            <Logo className="h-6 w-auto" />
+            <Logo className="h-10 w-auto" darkMode={darkMode} />
           </button>
-          
+
           <p className="text-xs text-tertiary dark:text-neutral-500 max-w-sm leading-relaxed mt-2">
             Engineering luxury home technologies with obsessive material and acoustic discipline.
           </p>
-          
+
           <div className="text-xs font-mono text-tertiary dark:text-neutral-500 mt-4 leading-normal">
             <div>© 2024 Krevvy.</div>
             <div>A Prowess Click Kart Enterprise.</div>
@@ -45,7 +46,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
           </h4>
           <ul className="space-y-3 text-sm">
             <li>
-              <button 
+              <button
                 onClick={() => handleNavClick('about')}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >
@@ -53,7 +54,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={() => handleNavClick('products')}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >
@@ -61,7 +62,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={() => handleNavClick('faq')}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >
@@ -78,7 +79,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
           </h4>
           <ul className="space-y-3 text-sm">
             <li>
-              <button 
+              <button
                 onClick={() => handleNavClick('contact')}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >
@@ -86,7 +87,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={onBuyClick}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >
@@ -94,7 +95,7 @@ export default function Footer({ setActiveView, onBuyClick }: FooterProps) {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={() => handleNavClick('contact')}
                 className="text-secondary hover:text-copper dark:text-neutral-400 dark:hover:text-primary-fixed-dim transition-colors cursor-pointer"
               >

@@ -11,12 +11,12 @@ interface HeaderProps {
   onBuyClick: () => void;
 }
 
-export default function Header({ 
-  activeView, 
-  setActiveView, 
-  darkMode, 
-  toggleDarkMode, 
-  onBuyClick 
+export default function Header({
+  activeView,
+  setActiveView,
+  darkMode,
+  toggleDarkMode,
+  onBuyClick
 }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,22 +49,21 @@ export default function Header({
   };
 
   return (
-    <nav 
+    <nav
       id="main-nav"
-      className={`fixed top-0 left-0 w-full z-90 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-pure-white/95 dark:bg-pure-black/95 backdrop-blur-md py-4 shadow-sm border-b border-hairline dark:border-neutral-800' 
-          : 'bg-pure-white/80 dark:bg-pure-black/80 backdrop-blur-sm py-6 border-b border-transparent'
-      }`}
+      className={`fixed top-0 left-0 w-full z-90 transition-all duration-300 ${scrolled
+        ? 'bg-pure-white/95 dark:bg-pure-black/95 backdrop-blur-md py-4 shadow-sm border-b border-hairline dark:border-neutral-800'
+        : 'bg-pure-white/80 dark:bg-pure-black/80 backdrop-blur-sm py-6 border-b border-transparent'
+        }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
         {/* Brand Logo */}
-        <button 
+        <button
           onClick={() => handleNavClick('home')}
           className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-copper/40 rounded-lg p-1"
           aria-label="Krevvy Home"
         >
-          <Logo className="h-7 w-auto" />
+          <Logo className="h-16 w-auto" darkMode={darkMode} />
         </button>
 
         {/* Desktop Navigation Links */}
@@ -75,11 +74,10 @@ export default function Header({
               <li key={item.view}>
                 <button
                   onClick={() => handleNavClick(item.view)}
-                  className={`relative py-2 text-sm font-semibold tracking-wider uppercase transition-colors duration-200 focus:outline-none focus:text-copper cursor-pointer ${
-                    isActive 
-                      ? 'text-copper dark:text-primary-fixed-dim font-bold' 
-                      : 'text-secondary hover:text-pure-black dark:text-neutral-400 dark:hover:text-pure-white'
-                  }`}
+                  className={`relative py-2 text-sm font-semibold tracking-wider uppercase transition-colors duration-200 focus:outline-none focus:text-copper cursor-pointer ${isActive
+                    ? 'text-copper dark:text-primary-fixed-dim font-bold'
+                    : 'text-secondary hover:text-pure-black dark:text-neutral-400 dark:hover:text-pure-white'
+                    }`}
                 >
                   {item.label}
                   {isActive && (
@@ -128,7 +126,7 @@ export default function Header({
           </button>
 
           {/* Menu Trigger */}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 text-pure-black dark:text-pure-white focus:outline-none focus:ring-2 focus:ring-copper/40 rounded-lg"
             aria-expanded={mobileMenuOpen}
@@ -140,21 +138,19 @@ export default function Header({
       </div>
 
       {/* Mobile Menu Drawer */}
-      <div 
-        className={`fixed inset-x-0 top-20 bg-pure-white dark:bg-pure-black border-b border-hairline dark:border-neutral-800 z-80 transition-all duration-300 md:hidden ${
-          mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
-        }`}
+      <div
+        className={`fixed inset-x-0 top-20 bg-pure-white dark:bg-pure-black border-b border-hairline dark:border-neutral-800 z-80 transition-all duration-300 md:hidden ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
+          }`}
       >
         <div className="px-6 py-8 flex flex-col space-y-5">
           {navItems.map((item) => (
             <button
               key={item.view}
               onClick={() => handleNavClick(item.view)}
-              className={`w-full py-2.5 text-left text-base font-semibold tracking-wider uppercase border-b border-surface-container-low dark:border-neutral-800/50 pb-2 ${
-                activeView === item.view
-                  ? 'text-copper dark:text-primary-fixed-dim pl-2 border-l-2 border-l-copper pl-2'
-                  : 'text-secondary dark:text-neutral-400'
-              }`}
+              className={`w-full py-2.5 text-left text-base font-semibold tracking-wider uppercase border-b border-surface-container-low dark:border-neutral-800/50 pb-2 ${activeView === item.view
+                ? 'text-copper dark:text-primary-fixed-dim pl-2 border-l-2 border-l-copper pl-2'
+                : 'text-secondary dark:text-neutral-400'
+                }`}
             >
               {item.label}
             </button>

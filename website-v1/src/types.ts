@@ -21,6 +21,10 @@ export interface Product {
   tagline: string;
   description: string;
   price: string;
+  category: 'home-kitchen' | 'agriculture' | 'office-ergonomics' | 'spiritual-decor';
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
+  discountLabel?: string;
   rating: number;
   reviewsCount: number;
   image: string;
