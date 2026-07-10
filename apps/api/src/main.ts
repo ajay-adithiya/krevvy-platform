@@ -2,6 +2,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { Reflector } from '@nestjs/core';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +15,10 @@ async function bootstrap() {
       transform: true,
       forbidNonWhitelisted: true,
     }),
+  );
+
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(app.get(Reflector)),
   );
 
   // Swagger Configuration
