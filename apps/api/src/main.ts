@@ -4,7 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { Reflector } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'; 
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { Logger } from '@nestjs/common';
 
+const logger = new Logger('Bootstrap');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
@@ -19,6 +22,10 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(
     new ResponseInterceptor(app.get(Reflector)),
+  );
+
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
   );
 
   // Swagger Configuration
@@ -49,7 +56,7 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger is available at: http://localhost:${port}/api/v1/docs`);
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Swagger is available at: http://localhost:${port}/api/v1/docs`);
 }
 bootstrap();
