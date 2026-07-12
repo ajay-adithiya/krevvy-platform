@@ -70,3 +70,13 @@ model ProductImage {
 
   createdAt DateTime @default(now())
 }
+
+model Setting {
+  id String @id @default(cuid())
+
+  key   String @unique
+  value Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
