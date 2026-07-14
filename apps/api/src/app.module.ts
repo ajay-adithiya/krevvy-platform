@@ -6,8 +6,11 @@ import jwtConfig from './config/jwt.config';
 
 import { LoggerModule } from './common/logger/logger.module';
 import { ProductModule } from './product/product.module';
-import { CmsModule } from './cms/cms.module';
+
 import { SettingsModule } from './settings/settings.module';
+import { UploadModule } from './upload/upload.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+
 
 @Module({
   imports: [
@@ -19,8 +22,10 @@ import { SettingsModule } from './settings/settings.module';
     PrismaModule,
     AuthModule,
     ProductModule,
-    CmsModule,
     SettingsModule,
+    SettingsModule,
+    UploadModule,
+    CloudinaryModule,
   ],
 })
 export class AppModule {}

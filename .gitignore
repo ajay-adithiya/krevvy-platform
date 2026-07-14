@@ -8,6 +8,11 @@ build/
 # Environment
 .env
 .env.*
+.env.local
+.env.development
+.env.production
+.env.test
+!.env.example
 
 # Logs
 logs/
@@ -25,3 +30,5 @@ coverage/
 
 # Cache
 .cache/
+
+.next
