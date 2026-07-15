@@ -13,8 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
+import { useAuthStore } from "@/store/auth.store";
+
 export default function LoginForm() {
   const router = useRouter();
+
+  const setAccessToken = useAuthStore(
+    (state) => state.setAccessToken,
+  );
+
 
   const {
     register,
@@ -30,8 +37,11 @@ export default function LoginForm() {
 
       const { accessToken, refreshToken } = response.data.data;
 
+      
       Cookies.set("accessToken", accessToken);
       Cookies.set("refreshToken", refreshToken);
+
+      setAccessToken(accessToken);
 
       router.push("/dashboard");
     } catch (error: any) {

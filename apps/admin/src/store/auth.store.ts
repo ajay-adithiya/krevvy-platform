@@ -2,15 +2,25 @@ import { create } from "zustand";
 
 interface AuthStore {
   accessToken: string | null;
-  setAccessToken: (token: string |null) => void;
+  isAuthenticated: boolean;
+
+  setAccessToken: (token: string | null) => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
   accessToken: null,
+  isAuthenticated: false,
 
-  setAccessToken(token) {
+  setAccessToken: (token) =>
     set({
       accessToken: token,
-    });
-  },
+      isAuthenticated: !!token,
+    }),
+
+  logout: () =>
+    set({
+      accessToken: null,
+      isAuthenticated: false,
+    }),
 }));
