@@ -28,20 +28,25 @@ export default function LoginForm() {
     try {
       const response = await login(data);
 
-      Cookies.set(
-        "accessToken",
-        response.data.accessToken,
-      );
+      const { accessToken, refreshToken } = response.data.data;
+
+      Cookies.set("accessToken", accessToken);
+      Cookies.set("refreshToken", refreshToken);
 
       router.push("/dashboard");
-    } catch {
-      alert("Invalid Credentials");
+    } catch (error: any) {
+      console.error(error);
+
+      if (error.response) {
+        alert(error.response.data.message ?? "Login failed");
+      } else {
+        alert("Unable to connect to the server.");
+      }
     }
   }
 
   return (
     <Card className="mx-auto mt-32 w-[400px] p-8">
-
       <h1 className="mb-6 text-3xl font-bold">
         Krevvy Admin
       </h1>
@@ -50,14 +55,13 @@ export default function LoginForm() {
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-4"
       >
-
         <Input
           placeholder="Email"
           {...register("email")}
         />
 
         {errors.email && (
-          <p className="text-red-500 text-sm">
+          <p className="text-sm text-red-500">
             {errors.email.message}
           </p>
         )}
@@ -69,7 +73,7 @@ export default function LoginForm() {
         />
 
         {errors.password && (
-          <p className="text-red-500 text-sm">
+          <p className="text-sm text-red-500">
             {errors.password.message}
           </p>
         )}
@@ -80,9 +84,7 @@ export default function LoginForm() {
         >
           Login
         </Button>
-
       </form>
-
     </Card>
   );
 }
