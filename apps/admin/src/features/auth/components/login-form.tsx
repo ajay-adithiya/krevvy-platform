@@ -37,9 +37,18 @@ export default function LoginForm() {
 
       const { accessToken, refreshToken } = response.data.data;
 
-      
+      console.log("Login Response:", response.data);
+      console.log("Access Token:", accessToken);
+
+      console.log("Before Cookies.set");
+
       Cookies.set("accessToken", accessToken);
       Cookies.set("refreshToken", refreshToken);
+
+      console.log(
+        "Cookie after set:",
+        Cookies.get("accessToken")
+      );
 
       setAccessToken(accessToken);
 

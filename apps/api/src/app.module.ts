@@ -11,6 +11,8 @@ import { SettingsModule } from './settings/settings.module';
 import { UploadModule } from './upload/upload.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
+import { CategoryModule } from './category/category.module';
+
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     PrismaModule,
     AuthModule,
     ProductModule,
-    SettingsModule,
+    CategoryModule,
     SettingsModule,
     UploadModule,
     CloudinaryModule,

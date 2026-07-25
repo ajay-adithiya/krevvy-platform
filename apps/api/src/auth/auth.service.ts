@@ -71,58 +71,37 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
-    this.logger.log(
-      `Login attempt for email: ${email}`,
-      AuthService.name,
-    );
+  this.logger.log(`Login attempt for email: ${email}`, AuthService.name);
 
-    const admin = await this.prisma.admin.findUnique({
-      where: {
-        email,
-      },
-    });
+  const admin = await this.prisma.admin.findUnique({
+    where: { email },
+  });
 
-    if (!admin) {
+  if (!admin) {
 
-    this.logger.warn(
-      `Login failed. Admin not found: ${email}`,
-      AuthService.name,
-    );
-    this.logger.warn(
-      `Login failed. Invalid password for: ${email}`,
-      AuthService.name,
-    );
+    throw new UnauthorizedException("Invalid email or password");
+  }
 
-      throw new UnauthorizedException('Invalid email or password');
-    }
+  const isPasswordValid = await bcrypt.compare(password, admin.password);
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      admin.password,
-    );
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
+  if (!isPasswordValid) {
 
-    const payload = {
-      sub: admin.id,
-      email: admin.email,
-    };
+    throw new UnauthorizedException("Invalid email or password");
+  }
 
-    const accessToken = await this.jwtService.signAsync(payload);
+  const payload = {
+    sub: admin.id,
+    email: admin.email,
+  };
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
-      expiresIn: this.configService.getOrThrow(
-        'jwt.refreshExpiresIn',
-      ) as StringValue,
-    });
+  const accessToken = await this.jwtService.signAsync(payload);
 
-    this.logger.log(
-      `Login successful: ${admin.email}`,
-      AuthService.name,
-    );
+
+  const refreshToken = await this.jwtService.signAsync(payload, {
+    secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
+    expiresIn: this.configService.getOrThrow("jwt.refreshExpiresIn") as StringValue,
+  });
 
     return {
       accessToken,
