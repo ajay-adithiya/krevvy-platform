@@ -9,21 +9,22 @@ export class CloudinaryService {
   ) {}
 
   async uploadImage(file: Express.Multer.File) {
-    return new Promise((resolve, reject) => {
+    return new Promise<any>((resolve, reject) => {
       this.cloudinary.uploader
         .upload_stream(
           {
-            folder: 'krevvy',
+            folder: 'krevvy/products',
           },
           (error, result) => {
-            if (error) {
-              return reject(error);
-            }
-
+            if (error) return reject(error);
             resolve(result);
           },
         )
         .end(file.buffer);
     });
+  }
+
+  async deleteImage(publicId: string) {
+    return this.cloudinary.uploader.destroy(publicId);
   }
 }

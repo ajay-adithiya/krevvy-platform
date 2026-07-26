@@ -58,7 +58,9 @@ model Product {
 model ProductImage {
   id String @id @default(cuid())
 
-  url     String
+  imageUrl String
+  publicId String
+
   altText String?
 
   displayOrder Int @default(0)
@@ -66,9 +68,10 @@ model ProductImage {
   isPrimary Boolean @default(false)
 
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Setting {

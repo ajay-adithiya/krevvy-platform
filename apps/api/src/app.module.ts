@@ -12,6 +12,7 @@ import { UploadModule } from './upload/upload.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 import { CategoryModule } from './category/category.module';
+import { ProductImageModule } from './product-image/product-image.module';
 
 
 @Module({
@@ -28,6 +29,7 @@ import { CategoryModule } from './category/category.module';
     SettingsModule,
     UploadModule,
     CloudinaryModule,
+    ProductImageModule,
   ],
 })
 export class AppModule {}
