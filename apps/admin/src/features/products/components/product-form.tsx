@@ -13,23 +13,36 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useCategories } from "@/features/categories/hooks/use-categories";
 
+import { useUpdateProduct } from "../hooks/use-update-product";
+
+import { ProductImages } from "./product-images";
+
 import { useCreateProduct } from "../hooks/use-create-product";
 import {
   createProductSchema,
   CreateProductFormValues,
 } from "../schemas/create-product.schema";
 
-interface CreateProductFormProps {
+import { Product } from "../types/product.types";
+
+interface ProductFormProps {
+  mode: "create" | "edit";
+  product?: Product;
   onSuccess: () => void;
 }
 
-export function CreateProductForm({
+export function ProductForm({
+  mode,
+  product,
   onSuccess,
-}: CreateProductFormProps) {
+}: ProductFormProps){
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
 
   const createProductMutation = useCreateProduct();
+
+  const updateProductMutation = useUpdateProduct();
+
 
   const {
     register,
@@ -41,14 +54,14 @@ export function CreateProductForm({
   } = useForm<CreateProductFormValues>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
-      name: "",
-      shortDescription: "",
-      description: "",
-      price: 0,
-      amazonUrl: "",
-      categoryId: "",
-      isFeatured: false,
-      isActive: true,
+      name: product?.name ?? "",
+      shortDescription: product?.shortDescription ?? "",
+      description: product?.description ?? "",
+      price: product?.price ?? 0,
+      amazonUrl: product?.amazonUrl ?? "",
+      categoryId: product?.category.id ?? "",
+      isFeatured: product?.isFeatured ?? false,
+      isActive: product?.isActive ?? true,
     },
   });
 
@@ -63,14 +76,30 @@ export function CreateProductForm({
   const isActive = watch("isActive");
 
   const onSubmit = (values: CreateProductFormValues) => {
-    console.log("Submitted Values:", values);
+    if (mode === "create") {
+      createProductMutation.mutate(values, {
+        onSuccess: () => {
+          reset();
+          onSuccess();
+        },
+      });
 
-    createProductMutation.mutate(values, {
-      onSuccess: () => {
-        reset();
-        onSuccess();
+      return;
+    }
+
+    if (!product) return;
+
+    updateProductMutation.mutate(
+      {
+        productId: product.id,
+        data: values,
       },
-    });
+      {
+        onSuccess: () => {
+          onSuccess();
+        },
+      },
+    );
   };
 
   return (
@@ -145,7 +174,9 @@ export function CreateProductForm({
             id="price"
             type="number"
             step="0.01"
-            {...register("price")}
+            {...register("price", {
+              valueAsNumber: true,
+            })}
           />
 
           {errors.price && (
@@ -261,6 +292,11 @@ export function CreateProductForm({
         </div>
       </div>
 
+      {/* Product Images */}
+      {mode === "edit" && product && (
+        <ProductImages productId={product.id} />
+      )}
+
       {/* Footer */}
       <div className="flex justify-end gap-3 pt-2">
         <Button
@@ -273,11 +309,18 @@ export function CreateProductForm({
 
         <Button
           type="submit"
-          disabled={createProductMutation.isPending}
+          disabled={
+            createProductMutation.isPending ||
+            updateProductMutation.isPending
+          }
         >
-          {createProductMutation.isPending
-            ? "Creating..."
-            : "Create Product"}
+          {mode === "create"
+            ? createProductMutation.isPending
+              ? "Creating..."
+              : "Create Product"
+            : updateProductMutation.isPending
+              ? "Updating..."
+              : "Update Product"}
         </Button>
       </div>
     </form>

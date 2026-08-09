@@ -3,6 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Product } from "../types/product.types";
 
+import { ProductActions } from "./product-actions";
+
 export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "name",
@@ -27,4 +29,11 @@ export const columns: ColumnDef<Product>[] = [
     cell: ({ row }) =>
       row.original.isActive ? "Active" : "Inactive",
   },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+      <ProductActions product={row.original} />
+    ),
+  }
 ];

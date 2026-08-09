@@ -13,27 +13,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { ProductForm } from "./product-form";
+import { CategoryForm } from "./category-form";
 
-export function CreateProductDialog() {
+export function CreateCategoryDialog() {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Product</Button>
+        <Button>Add Category</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create Product</DialogTitle>
+          <DialogTitle>Create Category</DialogTitle>
 
           <DialogDescription>
-            Fill in the product details below.
+            Fill in the category details below.
           </DialogDescription>
         </DialogHeader>
 
-        <ProductForm
+        <CategoryForm
           mode="create"
           onSuccess={() => setOpen(false)}
         />

@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-
 import {
   Dialog,
   DialogContent,
@@ -13,28 +12,42 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { ProductForm } from "./product-form";
+import { Category } from "../types/category.types";
+import { CategoryForm } from "./category-form";
 
-export function CreateProductDialog() {
+interface EditCategoryDialogProps {
+  category: Category;
+  trigger?: React.ReactNode;
+}
+
+export function EditCategoryDialog({
+  category,
+  trigger,
+}: EditCategoryDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Product</Button>
+        {trigger ?? (
+          <Button size="sm" variant="outline">
+            Edit
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create Product</DialogTitle>
+          <DialogTitle>Edit Category</DialogTitle>
 
           <DialogDescription>
-            Fill in the product details below.
+            Update category details.
           </DialogDescription>
         </DialogHeader>
 
-        <ProductForm
-          mode="create"
+        <CategoryForm
+          mode="edit"
+          category={category}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>

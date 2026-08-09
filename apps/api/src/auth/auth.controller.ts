@@ -59,15 +59,6 @@ export class AuthController {
     @Get('profile')
     @ApiBearerAuth('access-token')
     @ResponseMessage('Profile fetched successfully')
-    @ApiOperation({ summary: 'Get logged-in user profile' })
-    @ApiResponse({
-        status: 200,
-        description: 'Authenticated user profile.',
-    })
-    @ApiResponse({
-        status: 401,
-        description: 'Unauthorized.',
-    })
     getProfile(@Req() req: any) {
         return req.user;
     }

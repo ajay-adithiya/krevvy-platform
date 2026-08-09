@@ -35,20 +35,20 @@ export default function LoginForm() {
     try {
       const response = await login(data);
 
-      const { accessToken, refreshToken } = response.data.data;
+      const accessToken = response.data.data.accessToken;
+      const refreshToken = response.data.data.refreshToken;
 
-      console.log("Login Response:", response.data);
-      console.log("Access Token:", accessToken);
+      Cookies.set("accessToken", accessToken, {
+        expires: 7,
+        sameSite: "lax",
+        path: "/",
+      });
 
-      console.log("Before Cookies.set");
-
-      Cookies.set("accessToken", accessToken);
-      Cookies.set("refreshToken", refreshToken);
-
-      console.log(
-        "Cookie after set:",
-        Cookies.get("accessToken")
-      );
+      Cookies.set("refreshToken", refreshToken, {
+        expires: 7,
+        sameSite: "lax",
+        path: "/",
+      });
 
       setAccessToken(accessToken);
 

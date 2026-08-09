@@ -7,13 +7,22 @@ export async function getProducts() {
 }
 
 export async function createProduct(data: CreateProductDto) {
-  console.log("Sending payload:", data);
+  try {
+    console.log("Sending payload:", data);
 
-  const response = await api.post("/products", data);
+    const response = await api.post("/products", data);
 
-  console.log("Response:", response.data);
+    console.log("Response:", response.data);
 
-  return response.data.data;
+    return response.data.data;
+  } catch (error: any) {
+    console.error(
+      "Create Product Error:",
+      error.response?.data,
+    );
+
+    throw error;
+  }
 }
 
 export interface CreateProductDto {
