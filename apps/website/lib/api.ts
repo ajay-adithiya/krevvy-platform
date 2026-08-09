@@ -21,6 +21,11 @@ export async function getProducts(): Promise<Product[]> {
   }
 }
 
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const products = await getProducts();
+  return products.find(p => p.slug === slug) || null;
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/categories`, {
