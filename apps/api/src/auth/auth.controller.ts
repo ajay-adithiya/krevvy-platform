@@ -18,6 +18,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -53,6 +54,21 @@ export class AuthController {
     })
     login(@Body() loginDto: LoginDto) {
         return this.authService.login(loginDto);
+    }
+
+    @Post('refresh')
+    @ResponseMessage('Token refreshed successfully')
+    @ApiOperation({ summary: 'Refresh access token' })
+    @ApiResponse({
+        status: 200,
+        description: 'Token refreshed successfully.',
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid or expired refresh token.',
+    })
+    refresh(@Body() refreshDto: RefreshDto) {
+        return this.authService.refresh(refreshDto.refreshToken);
     }
 
     @UseGuards(JwtAuthGuard)

@@ -108,4 +108,43 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  async refresh(refreshToken: string): Promise<LoginResponse> {
+    this.logger.log(`Refresh token attempt`, AuthService.name);
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
+      });
+
+      const admin = await this.prisma.admin.findUnique({
+        where: { id: payload.sub },
+      });
+
+      if (!admin) {
+        throw new UnauthorizedException('Admin not found');
+      }
+
+      const newPayload = {
+        sub: admin.id,
+        email: admin.email,
+      };
+
+      const newAccessToken = await this.jwtService.signAsync(newPayload);
+      const newRefreshToken = await this.jwtService.signAsync(newPayload, {
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.getOrThrow('jwt.refreshExpiresIn') as StringValue,
+      });
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      this.logger.warn(
+        'Refresh token validation failed',
+        AuthService.name,
+      );
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
 }

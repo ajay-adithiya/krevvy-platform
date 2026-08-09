@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CategoryActions } from "./category-actions";
 import { Category } from "../types/category.types";
 
-export const columns: ColumnDef<Category>[] = [
+export const categoryColumns: ColumnDef<Category>[] = [
   {
     accessorKey: "name",
     header: "Name",

@@ -8,6 +8,7 @@ import {
   useProductImages,
   useUploadProductImage,
 } from "../hooks/use-product-images";
+import { ProductImage } from "../types/product-image";
 
 interface ProductImagesProps {
   productId: string;
@@ -75,7 +76,7 @@ export function ProductImages({
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {images.map((image) => (
+          {images.map((image: ProductImage) => (
             <div
               key={image.id}
               className="rounded-lg border p-2"

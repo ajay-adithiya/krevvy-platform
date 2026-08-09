@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCategories } from "@/features/categories/hooks/use-categories";
+import { Category } from "@/features/categories/types/category.types";
 
 import { useUpdateProduct } from "../hooks/use-update-product";
 
@@ -230,7 +231,7 @@ export function ProductForm({
                 Loading...
               </SelectItem>
             ) : (
-              categories.map((category) => (
+              categories.map((category: Category) => (
                 <SelectItem
                   key={category.id}
                   value={category.id}

@@ -23,7 +23,7 @@ export const createCategorySchema = z.object({
     .max(500, "Description cannot exceed 500 characters")
     .optional(),
 
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 export type CreateCategoryFormValues = z.infer<

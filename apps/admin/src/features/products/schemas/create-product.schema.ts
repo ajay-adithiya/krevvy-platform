@@ -7,7 +7,7 @@ export const createProductSchema = z.object({
 
   description: z.string().min(1, "Description is required"),
 
-  price: z.coerce
+  price: z
     .number()
     .positive("Price must be greater than 0"),
 
@@ -17,9 +17,9 @@ export const createProductSchema = z.object({
     .optional()
     .or(z.literal("")),
 
-  isFeatured: z.boolean().default(false),
+  isFeatured: z.boolean(),
 
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 
   categoryId: z.string().min(1, "Category is required"),
 });
