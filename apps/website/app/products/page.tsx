@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { getProducts, getCategories } from "../../lib/api";
 import { ProductBrowser } from "../../components/products/product-browser";
 import { Product } from "../../types";
@@ -29,10 +30,12 @@ export default async function ProductsPage() {
           </p>
         </div>
 
-        <ProductBrowser 
-          initialProducts={activeProducts} 
-          categories={activeCategories} 
-        />
+        <Suspense fallback={<div className="py-20 text-center">Loading products...</div>}>
+          <ProductBrowser 
+            initialProducts={activeProducts} 
+            categories={activeCategories} 
+          />
+        </Suspense>
       </div>
     </div>
   );

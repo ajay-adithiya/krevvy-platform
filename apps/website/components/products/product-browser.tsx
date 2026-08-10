@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Product, Category } from "../../types";
 import { ProductCard } from "./product-card";
 
@@ -10,8 +11,17 @@ interface ProductBrowserProps {
 }
 
 export function ProductBrowser({ initialProducts, categories }: ProductBrowserProps) {
+  const searchParams = useSearchParams();
+  const initialCategoryId = searchParams.get("category") || "all";
+  
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
+
+  // Sync state if URL search params change
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get("category") || "all";
+    setSelectedCategoryId(categoryFromUrl);
+  }, [searchParams]);
 
   const filteredProducts = useMemo(() => {
     return initialProducts.filter((product) => {
