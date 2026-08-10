@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { getProducts } from "../../lib/api";
-import { ProductCard } from "../../components/products/product-card";
+import { getProducts, getCategories } from "../../lib/api";
+import { ProductBrowser } from "../../components/products/product-browser";
 import { Product } from "../../types";
 
 export const metadata: Metadata = {
@@ -9,8 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductsPage() {
-  const products = await getProducts();
+  const [products, categories] = await Promise.all([
+    getProducts(),
+    getCategories()
+  ]);
+
   const activeProducts = products.filter(p => p.isActive);
+  const activeCategories = categories.filter(c => c.isActive);
 
   return (
     <div className="flex-1 bg-background pt-24 pb-32">
@@ -24,18 +29,10 @@ export default async function ProductsPage() {
           </p>
         </div>
 
-        {activeProducts.length === 0 ? (
-          <div className="py-20 text-center">
-            <h2 className="text-2xl font-bold mb-2">No Products Available</h2>
-            <p className="text-foreground/70">Check back soon for new arrivals.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {activeProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
+        <ProductBrowser 
+          initialProducts={activeProducts} 
+          categories={activeCategories} 
+        />
       </div>
     </div>
   );
