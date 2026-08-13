@@ -46,21 +46,6 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold">Legal</h4>
-            <ul className="space-y-2 text-sm text-foreground/60">
-              <li>
-                <Link href="#" className="hover:text-foreground transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-foreground transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
-          </div>
         </div>
 
         <div className="mt-12 pt-8 border-t flex flex-col md:flex-row items-center justify-between text-xs text-foreground/60">
