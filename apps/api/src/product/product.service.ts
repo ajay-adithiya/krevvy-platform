@@ -68,6 +68,7 @@ export class ProductService {
         isFeatured: createProductDto.isFeatured ?? false,
         isActive: createProductDto.isActive ?? true,
         categoryId: createProductDto.categoryId,
+        stock: createProductDto.stock ?? 0,
       },
     });
 

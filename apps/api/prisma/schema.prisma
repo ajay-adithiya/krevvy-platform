@@ -39,7 +39,9 @@ model Product {
   shortDescription String?
   description      String
 
-  price Decimal @db.Decimal(10, 2)
+  price         Decimal @db.Decimal(10, 2)
+  stock         Int     @default(0)
+  reservedStock Int     @default(0)
 
   amazonUrl String?
 
@@ -49,7 +51,8 @@ model Product {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
-  images ProductImage[]
+  images     ProductImage[]
+  orderItems OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,7 +71,7 @@ model ProductImage {
   isPrimary Boolean @default(false)
 
   productId String
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,4 +85,67 @@ model Setting {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PAYMENT_FAILED
+  EXPIRED
+  CANCELLED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+}
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique
+
+  customerName  String
+  customerEmail String
+  customerPhone String
+
+  shippingAddressLine1 String
+  shippingAddressLine2 String?
+  shippingCity         String
+  shippingState        String
+  shippingPostalCode   String
+  shippingCountry      String  @default("India")
+
+  subTotal    Decimal @db.Decimal(10, 2)
+  tax         Decimal @db.Decimal(10, 2)
+  shippingFee Decimal @db.Decimal(10, 2)
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  status OrderStatus @default(PENDING_PAYMENT)
+  isPaid Boolean     @default(false)
+
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String? @unique
+  razorpaySignature String?
+
+  paidAt       DateTime?
+  paymentError String?
+  expiresAt    DateTime?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  productName String
+  priceAtTime Decimal @db.Decimal(10, 2)
+
+  quantity Int
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

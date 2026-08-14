@@ -1,4 +1,5 @@
 import { Product } from "../../types";
+import { AddToCartButton } from "../cart/add-to-cart-button";
 
 interface ProductInfoProps {
   product: Product;
@@ -21,7 +22,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Price */}
       <div className="text-2xl font-bold text-foreground mb-6">
-        ${Number(product.price).toFixed(2)}
+        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(product.price)}
       </div>
 
       {/* Divider */}
@@ -41,32 +42,34 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </p>
       </div>
 
-      {/* Actions (pushed to bottom if needed, though usually flow normally) */}
-      <div className="mt-auto pt-8">
+      {/* Actions */}
+      <div className="mt-auto pt-8 flex flex-col sm:flex-row gap-4">
+        <AddToCartButton product={product} className="flex-1 h-14 text-base" />
+
         {product.amazonUrl ? (
           <a
             href={product.amazonUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-14 w-full items-center justify-center rounded-md bg-foreground px-8 text-base font-medium text-background transition-colors hover:bg-foreground/90 shadow-sm"
+            className="inline-flex h-14 flex-1 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm"
           >
             Buy on Amazon
           </a>
         ) : (
           <button
             disabled
-            className="inline-flex h-14 w-full items-center justify-center rounded-md bg-muted px-8 text-base font-medium text-muted-foreground cursor-not-allowed"
+            className="inline-flex h-14 flex-1 items-center justify-center rounded-md bg-muted px-8 text-base font-medium text-muted-foreground cursor-not-allowed"
           >
-            Currently Unavailable
+            Unavailable
           </button>
         )}
-        
-        {product.amazonUrl && (
+      </div>
+
+      {product.amazonUrl && (
           <p className="text-center text-xs text-muted-foreground mt-4">
             You will be redirected to Amazon to securely complete your purchase.
           </p>
         )}
-      </div>
     </div>
   );
 }

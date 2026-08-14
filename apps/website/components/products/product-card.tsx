@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "../../types";
+import { AddToCartButton } from "../cart/add-to-cart-button";
 
 interface ProductCardProps {
   product: Product;
@@ -31,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
             </Link>
           </h3>
           <span className="font-medium whitespace-nowrap">
-            ${Number(product.price).toFixed(2)}
+            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(product.price)}
           </span>
         </div>
         
@@ -46,29 +47,33 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         
         <div className="flex flex-col gap-2 mt-auto">
-          {product.amazonUrl ? (
-            <a
-              href={product.amazonUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 w-full items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          <AddToCartButton product={product} className="w-full" />
+
+          <div className="grid grid-cols-2 gap-2">
+            {product.amazonUrl ? (
+              <a
+                href={product.amazonUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                Amazon
+              </a>
+            ) : (
+              <button
+                disabled
+                className="inline-flex h-10 w-full items-center justify-center rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed"
+              >
+                Amazon
+              </button>
+            )}
+            <Link
+              href={`/products/${product.slug}`}
+              className="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              Buy on Amazon
-            </a>
-          ) : (
-            <button
-              disabled
-              className="inline-flex h-10 w-full items-center justify-center rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed"
-            >
-              Unavailable
-            </button>
-          )}
-          <Link
-            href={`/products/${product.slug}`}
-            className="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            View Details
-          </Link>
+              Details
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -39,6 +39,16 @@ export class CreateProductDto {
   price!: number;
 
   @ApiProperty({
+    example: 100,
+    description: 'Stock quantity available',
+    default: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  stock?: number;
+
+  @ApiProperty({
     example: 'https://amazon.in/your-product',
     required: false,
   })
