@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../common/logger/logger.service';
@@ -6,6 +6,9 @@ import { ValidateCheckoutDto } from './dto/validate-checkout.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import Razorpay from 'razorpay';
 import { validatePaymentVerification, validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
+import { GetOrdersDto } from './dto/get-orders.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { OrderStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -21,9 +24,127 @@ export class OrdersService {
     });
   }
 
+  async getOrders(dto: GetOrdersDto) {
+    const page = dto.page || 1;
+    const limit = dto.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.OrderWhereInput = {};
+
+    if (dto.search) {
+      where.OR = [
+        { orderNumber: { contains: dto.search, mode: 'insensitive' } },
+        { customerName: { contains: dto.search, mode: 'insensitive' } },
+        { customerEmail: { contains: dto.search, mode: 'insensitive' } },
+        { customerPhone: { contains: dto.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (dto.status) {
+      where.status = dto.status;
+    }
+
+    if (dto.isPaid !== undefined) {
+      where.isPaid = dto.isPaid;
+    }
+
+    const [total, orders] = await Promise.all([
+      this.prisma.order.count({ where }),
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          customerEmail: true,
+          customerPhone: true,
+          status: true,
+          isPaid: true,
+          totalAmount: true,
+          createdAt: true,
+          razorpayOrderId: true,
+        },
+      }),
+    ]);
+
+    return {
+      data: orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getOrderById(id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // We return the order, which already excludes Razorpay keys since they are not in the schema.
+    // razorpaySignature is in the schema, but the instructions say "Never return: unnecessary payment signature data".
+    // We should explicitly select or omit it.
+    const { razorpaySignature, ...safeOrder } = order;
+    return safeOrder;
+  }
+
+  async updateOrderStatus(id: string, dto: UpdateOrderStatusDto) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: { status: true }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Valid transitions
+    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
+      [OrderStatus.PENDING_PAYMENT]: [],
+      [OrderStatus.PAID]: [OrderStatus.PROCESSING],
+      [OrderStatus.PROCESSING]: [OrderStatus.SHIPPED],
+      [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
+      [OrderStatus.DELIVERED]: [],
+      [OrderStatus.PAYMENT_FAILED]: [],
+      [OrderStatus.EXPIRED]: [],
+      [OrderStatus.CANCELLED]: [],
+    };
+
+    const allowedNextStates = validTransitions[order.status];
+    if (!allowedNextStates.includes(dto.status)) {
+      throw new BadRequestException(`Invalid status transition from ${order.status} to ${dto.status}`);
+    }
+
+    // Atomic update using OCC
+    const updateResult = await this.prisma.order.updateMany({
+      where: { id, status: order.status },
+      data: { status: dto.status },
+    });
+
+    if (updateResult.count === 0) {
+      throw new BadRequestException('Order status could not be updated due to concurrent modification or invalid state.');
+    }
+
+    this.logger.log(`Order ${id} status updated from ${order.status} to ${dto.status}`, OrdersService.name);
+
+    return this.getOrderById(id);
+  }
+
   async validateCheckout(dto: ValidateCheckoutDto) {
     const productIds = dto.items.map((i) => i.productId);
-    
+
     const products = await this.prisma.product.findMany({
       where: {
         id: { in: productIds },
@@ -32,28 +153,28 @@ export class OrdersService {
     });
 
     const productMap = new Map(products.map((p) => [p.id, p]));
-    
+
     let subTotal = 0;
     const validatedItems: any[] = [];
     const errors: string[] = [];
 
     for (const item of dto.items) {
       const product = productMap.get(item.productId);
-      
+
       if (!product) {
         errors.push(`Product not found or inactive: ${item.productId}`);
         continue;
       }
-      
+
       const availableStock = product.stock - product.reservedStock;
       if (availableStock < item.quantity) {
         errors.push(`Insufficient stock for ${product.name}. Available: ${availableStock}, Requested: ${item.quantity}`);
         continue;
       }
-      
+
       const itemTotal = Number(product.price) * item.quantity;
       subTotal += itemTotal;
-      
+
       validatedItems.push({
         productId: product.id,
         name: product.name,
@@ -88,7 +209,7 @@ export class OrdersService {
     return `${prefix}-${random}-${timestamp}`;
   }
 
-  async createOrder(dto: CreateOrderDto) {
+  async createOrder(dto: CreateOrderDto, customerId?: string) {
     // 1. Validate exactly like checkout
     const validationResult = await this.validateCheckout({ items: dto.items });
 
@@ -113,6 +234,7 @@ export class OrdersService {
             tax: validationResult.tax,
             totalAmount: validationResult.totalAmount,
             status: 'PENDING_PAYMENT',
+            customerId: customerId || null,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
             items: {
               create: validationResult.items.map((item) => ({
@@ -136,7 +258,7 @@ export class OrdersService {
             WHERE id = ${item.productId}
               AND ("stock" - "reservedStock") >= ${item.quantity}
           `;
-          
+
           if (updatedRows === 0) {
             throw new BadRequestException(`Insufficient stock for ${item.name} during reservation.`);
           }
@@ -211,8 +333,8 @@ export class OrdersService {
 
         // Atomic OCC update
         const updateResult = await tx.order.updateMany({
-          where: { 
-            id: order.id, 
+          where: {
+            id: order.id,
             status: 'PENDING_PAYMENT',
             isPaid: false
           },
@@ -265,7 +387,7 @@ export class OrdersService {
 
   async handleWebhook(rawBody: Buffer, signature: string) {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-    
+
     let event;
     try {
       // Validate signature
@@ -293,7 +415,7 @@ export class OrdersService {
               where: { id: order.id, status: 'PENDING_PAYMENT' },
               data: { status: 'PAYMENT_FAILED', paymentError: errorReason },
             });
-            
+
             if (updateResult.count === 1) {
               // Release reserved stock safely since we hold the OCC lock
               for (const item of order.items) {
@@ -323,7 +445,7 @@ export class OrdersService {
                 paidAt: new Date(),
               },
             });
-            
+
             if (updateResult.count === 1) {
               // Consume stock safely
               for (const item of order.items) {
@@ -349,7 +471,7 @@ export class OrdersService {
   @Cron(CronExpression.EVERY_MINUTE)
   async expireReservations() {
     this.logger.log('Running reservation expiration job', OrdersService.name);
-    
+
     // Find all orders that are PENDING_PAYMENT and expired
     const expiredOrders = await this.prisma.order.findMany({
       where: {

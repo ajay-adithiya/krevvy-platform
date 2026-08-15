@@ -16,6 +16,54 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  sessions  CustomerSession[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpCode {
+  id         String   @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  isConsumed Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model CustomerSession {
+  id               String    @id @default(cuid())
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpRateLimit {
+  id           String   @id @default(cuid())
+  email        String
+  windowStart  DateTime
+  requestCount Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, windowStart])
+}
+
 model Category {
   id          String  @id @default(cuid())
   name        String
@@ -128,6 +176,9 @@ model Order {
   paidAt       DateTime?
   paymentError String?
   expiresAt    DateTime?
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
 
   items OrderItem[]
 

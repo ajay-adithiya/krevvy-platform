@@ -1,0 +1,76 @@
+import { Controller, Post, Body, Get, UseGuards, Req, HttpCode, HttpStatus, Param, Query } from '@nestjs/common';
+import { CustomersService } from './customers.service';
+import { RequestOtpDto } from './dto/request-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { CustomerJwtAuthGuard } from './guards/customer-jwt-auth.guard';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('Customers')
+@Controller('customers')
+export class CustomersController {
+  constructor(private readonly customersService: CustomersService) {}
+
+  @Post('auth/request-otp')
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request an OTP for customer login/registration' })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully (or rate limited safely)' })
+  async requestOtp(@Body() body: RequestOtpDto) {
+    return this.customersService.requestOtp(body.email);
+  }
+
+  @Post('auth/verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify OTP and get customer tokens' })
+  @ApiResponse({ status: 200, description: 'OTP verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
+  async verifyOtp(@Body() body: VerifyOtpDto) {
+    return this.customersService.verifyOtp(body.email, body.otp);
+  }
+
+  @Post('auth/refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh customer access token' })
+  @ApiResponse({ status: 200, description: 'Tokens refreshed' })
+  async refresh(@Body() body: RefreshDto) {
+    return this.customersService.refresh(body.refreshToken);
+  }
+
+  @Post('auth/logout')
+  @UseGuards(CustomerJwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout customer' })
+  async logout(@Body() body: RefreshDto) {
+    return this.customersService.logout(body.refreshToken);
+  }
+
+  @Get('me')
+  @UseGuards(CustomerJwtAuthGuard)
+  @ApiOperation({ summary: 'Get current customer profile' })
+  async getProfile(@Req() req: any) {
+    return this.customersService.getCustomerProfile(req.user.id);
+  }
+
+  @Get('me/orders')
+  @UseGuards(CustomerJwtAuthGuard)
+  @ApiOperation({ summary: 'Get current customer orders' })
+  async getMyOrders(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.customersService.getCustomerOrders(req.user.id, pageNum, limitNum, status);
+  }
+
+  @Get('me/orders/:id')
+  @UseGuards(CustomerJwtAuthGuard)
+  @ApiOperation({ summary: 'Get specific customer order details' })
+  async getMyOrderById(@Req() req: any, @Param('id') orderId: string) {
+    return this.customersService.getCustomerOrderById(req.user.id, orderId);
+  }
+}

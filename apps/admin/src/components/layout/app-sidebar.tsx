@@ -7,6 +7,7 @@ import {
   FolderTree,
   Settings,
   LogOut,
+  ShoppingCart,
 } from "lucide-react";
 
 import {
@@ -36,6 +37,11 @@ const items = [
     title: "Categories",
     url: "/dashboard/categories",
     icon: FolderTree,
+  },
+  {
+    title: "Orders",
+    url: "/dashboard/orders",
+    icon: ShoppingCart,
   },
   {
     title: "Settings",

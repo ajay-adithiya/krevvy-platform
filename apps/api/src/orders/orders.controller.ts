@@ -1,15 +1,29 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Req, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard/jwt-auth.guard';
+import { OptionalCustomerJwtAuthGuard } from '../customers/guards/optional-customer-jwt-auth.guard';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { OrdersService } from './orders.service';
 import { ValidateCheckoutDto } from './dto/validate-checkout.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { GetOrdersDto } from './dto/get-orders.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get a paginated list of orders (Admin)' })
+  @ApiResponse({ status: 200, description: 'List of orders returned successfully' })
+  async getOrders(@Query() getOrdersDto: GetOrdersDto) {
+    return this.ordersService.getOrders(getOrdersDto);
+  }
+
+
 
   @Post('checkout/validate')
   @HttpCode(HttpStatus.OK)
@@ -21,11 +35,13 @@ export class OrdersController {
   }
 
   @Post()
+  @UseGuards(OptionalCustomerJwtAuthGuard)
   @ApiOperation({ summary: 'Create a new order' })
   @ApiResponse({ status: 201, description: 'Order created successfully' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  async createOrder(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.createOrder(createOrderDto);
+  async createOrder(@Req() req: any, @Body() createOrderDto: CreateOrderDto) {
+    const customerId = req.user?.id || null;
+    return this.ordersService.createOrder(createOrderDto, customerId);
   }
 
   @Post('verify')
@@ -50,6 +66,28 @@ export class OrdersController {
       throw new BadRequestException('Raw body not found. Make sure { rawBody: true } is configured in NestFactory.');
     }
     return this.ordersService.handleWebhook(req.rawBody, signature);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get order details by ID (Admin)' })
+  @ApiResponse({ status: 200, description: 'Order details returned successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async getOrderById(@Param('id') id: string) {
+    return this.ordersService.getOrderById(id);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update order status (Admin)' })
+  @ApiResponse({ status: 200, description: 'Order status updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async updateOrderStatus(
+    @Param('id') id: string,
+    @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateOrderStatus(id, updateOrderStatusDto);
   }
 }
 

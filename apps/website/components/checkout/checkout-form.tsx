@@ -51,7 +51,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validationData || loading) return;
-    
+
     setLoading(true);
     setError(null);
 
@@ -62,7 +62,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
       }
 
       let order = pendingOrder;
-      
+
       // If we have a pending order, verify its authoritative backend status
       if (order && order.razorpayOrderId) {
         try {
@@ -70,7 +70,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
           if (statusRes.ok) {
             const statusData = await statusRes.json();
             const isExpired = statusData.expiresAt && new Date(statusData.expiresAt) < new Date();
-            
+
             if (statusData.status !== 'PENDING_PAYMENT' || isExpired) {
               order = null; // Stale, failed, or expired. Discard it.
               setPendingOrder(null);
@@ -95,7 +95,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
         order = await createOrder(orderPayload);
         setPendingOrder(order);
       }
-      
+
       if (!order.razorpayOrderId) {
         throw new Error("Razorpay order ID not received from server.");
       }
@@ -119,10 +119,17 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
               }),
             });
             const verifyData = await verifyRes.json();
-            
+
             if (verifyRes.ok && verifyData.success) {
+              const confirmationData = {
+                orderNumber: verifyData.order.orderNumber,
+                status: verifyData.order.status,
+                totalAmount: verifyData.order.totalAmount,
+                paidAt: verifyData.order.paidAt,
+              };
+              sessionStorage.setItem('krevvy_order_confirmation', JSON.stringify(confirmationData));
               clearCart();
-              router.push(`/checkout/success?orderId=${order.orderNumber}`);
+              router.push(`/checkout/success`);
             } else {
               setError("Payment verification failed. Please contact support.");
               setLoading(false);
@@ -237,7 +244,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
                 onChange={handleChange}
               />
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">City</label>

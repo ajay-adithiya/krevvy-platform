@@ -133,11 +133,11 @@ describe('OrdersService', () => {
     // Initial state: PENDING_PAYMENT. It should release
     await service.handleWebhook(rawBody, 'sig');
     expect(mockPrisma.product.update).toHaveBeenCalledTimes(1); // Released
-    
+
     // Reset and make it PAID
     mockPrisma.product.update.mockClear();
     mockPrisma.order.findUnique.mockResolvedValue({ status: 'PAID' });
-    
+
     await service.handleWebhook(rawBody, 'sig');
     expect(mockPrisma.product.update).toHaveBeenCalledTimes(0); // Cannot release a paid order
   });
@@ -147,13 +147,73 @@ describe('OrdersService', () => {
     mockPrisma.order.findMany = jest.fn().mockResolvedValue([{ id: 'order_1', status: 'PENDING_PAYMENT', items: [{ productId: 'prod_1', quantity: 1 }] }]);
     await service.expireReservations();
     expect(mockPrisma.product.update).toHaveBeenCalledTimes(1); // Released
-    
+
     // Simulate a concurrent payment that just completed and changed the state to PAID
     mockPrisma.product.update.mockClear();
     mockPrisma.order.findUnique.mockResolvedValue({ id: 'order_1', status: 'PAID' }); // Wait, updateMany OCC handles this, but since findUnique is used first, we can mock it here
     mockPrisma.order.updateMany.mockReturnValue({ count: 0 }); // OCC fails because it's no longer PENDING_PAYMENT
-    
+
     await service.expireReservations();
     expect(mockPrisma.product.update).toHaveBeenCalledTimes(0); // Must not release if it's already paid
+  });
+
+  // --- Phase 4A Status Transition Tests ---
+
+  it('E. PAID -> PROCESSING succeeds', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_paid', status: 'PAID' });
+    mockPrisma.order.updateMany = jest.fn().mockReturnValue({ count: 1 });
+
+    await service.updateOrderStatus('order_paid', { status: 'PROCESSING' } as any);
+    expect(mockPrisma.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'order_paid', status: 'PAID' },
+      data: { status: 'PROCESSING' }
+    });
+  });
+
+  it('F. PROCESSING -> SHIPPED succeeds', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_proc', status: 'PROCESSING' });
+    mockPrisma.order.updateMany = jest.fn().mockReturnValue({ count: 1 });
+
+    await service.updateOrderStatus('order_proc', { status: 'SHIPPED' } as any);
+    expect(mockPrisma.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'order_proc', status: 'PROCESSING' },
+      data: { status: 'SHIPPED' }
+    });
+  });
+
+  it('G. SHIPPED -> DELIVERED succeeds', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_ship', status: 'SHIPPED' });
+    mockPrisma.order.updateMany = jest.fn().mockReturnValue({ count: 1 });
+
+    await service.updateOrderStatus('order_ship', { status: 'DELIVERED' } as any);
+    expect(mockPrisma.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'order_ship', status: 'SHIPPED' },
+      data: { status: 'DELIVERED' }
+    });
+  });
+
+  it('H. Invalid transition is rejected', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_paid', status: 'PAID' });
+    await expect(service.updateOrderStatus('order_paid', { status: 'DELIVERED' } as any)).rejects.toThrow('Invalid status transition from PAID to DELIVERED');
+  });
+
+  it('I. PENDING_PAYMENT cannot become PROCESSING', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_pend', status: 'PENDING_PAYMENT' });
+    await expect(service.updateOrderStatus('order_pend', { status: 'PROCESSING' } as any)).rejects.toThrow('Invalid status transition');
+  });
+
+  it('J. PAYMENT_FAILED cannot become PROCESSING', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_fail', status: 'PAYMENT_FAILED' });
+    await expect(service.updateOrderStatus('order_fail', { status: 'PROCESSING' } as any)).rejects.toThrow('Invalid status transition');
+  });
+
+  it('K. EXPIRED cannot become PROCESSING', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_exp', status: 'EXPIRED' });
+    await expect(service.updateOrderStatus('order_exp', { status: 'PROCESSING' } as any)).rejects.toThrow('Invalid status transition');
+  });
+
+  it('L. DELIVERED cannot transition again', async () => {
+    mockPrisma.order.findUnique = jest.fn().mockResolvedValue({ id: 'order_del', status: 'DELIVERED' });
+    await expect(service.updateOrderStatus('order_del', { status: 'PROCESSING' } as any)).rejects.toThrow('Invalid status transition');
   });
 });
