@@ -1,4 +1,5 @@
 import { ApiResponse, Product, Category } from "../types";
+import { fetchWithAuth } from "./api-client";
 
 const API_BASE_URL = "http://localhost:5000/api/v1";
 
@@ -46,7 +47,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function validateCheckout(items: import('../types').CheckoutItem[]): Promise<import('../types').ValidateCheckoutResponse> {
-  const res = await fetch(`${API_BASE_URL}/orders/checkout/validate`, {
+  const res = await fetchWithAuth(`/orders/checkout/validate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -64,7 +65,7 @@ export async function validateCheckout(items: import('../types').CheckoutItem[])
 }
 
 export async function createOrder(data: any): Promise<import('../types').Order> {
-  const res = await fetch(`${API_BASE_URL}/orders`, {
+  const res = await fetchWithAuth(`/orders`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

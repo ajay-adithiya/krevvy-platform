@@ -93,3 +93,17 @@ export interface Order {
   expiresAt?: string | null;
   createdAt: string;
 }
+
+export interface Customer {
+  id: string;
+  email: string;
+  name?: string | null;
+  phone?: string | null;
+  createdAt: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+}
+
+export interface AuthResponse extends AuthTokens {}

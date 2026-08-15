@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CartDrawer } from "../cart/cart-drawer";
+import { useAuthStore } from "../../store/auth.store";
+import { AuthModal } from "../auth/auth-modal";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, user, logout: storeLogout } = useAuthStore();
   const pathname = usePathname();
+
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:5000/api/v1/customers/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (e) {
+      // Ignore
+    }
+    storeLogout();
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -41,7 +62,27 @@ export function Header() {
         </nav>
 
         {/* Right side actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          {mounted && (
+            isAuthenticated ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <Link href="/account" className="text-sm font-medium hover:text-foreground/80">
+                  {user?.name || user?.email || 'Account'}
+                </Link>
+                <button onClick={logout} className="text-sm font-medium text-red-600 hover:text-red-700">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="hidden md:block text-sm font-medium hover:text-foreground/80"
+              >
+                Login
+              </button>
+            )
+          )}
+
           {/* Cart Drawer */}
           <CartDrawer />
 
@@ -77,9 +118,43 @@ export function Header() {
                 {link.name}
               </Link>
             ))}
+            {mounted && (
+              isAuthenticated ? (
+                <>
+                  <Link
+                    href="/account"
+                    className="text-sm font-medium text-foreground transition-colors hover:text-foreground/80"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Account
+                  </Link>
+                  <button
+                    className="text-left text-sm font-medium text-red-600 transition-colors hover:text-red-700"
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="text-left text-sm font-medium text-foreground transition-colors hover:text-foreground/80"
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Login
+                </button>
+              )
+            )}
           </nav>
         </div>
       )}
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </header>
   );
 }

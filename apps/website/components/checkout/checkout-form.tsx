@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ValidateCheckoutResponse } from "../../types";
 import { useCartStore } from "../../store/cart.store";
+import { useAuthStore } from "../../store/auth.store";
 import { createOrder } from "../../lib/api";
 
 interface CheckoutFormProps {
@@ -14,14 +15,15 @@ interface CheckoutFormProps {
 export function CheckoutForm({ validationData, validationError }: CheckoutFormProps) {
   const router = useRouter();
   const { items: cartItems, clearCart } = useCartStore();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingOrder, setPendingOrder] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    customerName: "",
-    customerEmail: "",
-    customerPhone: "",
+    customerName: user?.name || "",
+    customerEmail: user?.email || "",
+    customerPhone: user?.phone || "",
     shippingAddressLine1: "",
     shippingAddressLine2: "",
     shippingCity: "",
@@ -29,6 +31,18 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
     shippingPostalCode: "",
     shippingCountry: "India",
   });
+
+  // Keep it synced if user loads later
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: prev.customerName || user.name || "",
+        customerEmail: prev.customerEmail || user.email || "",
+        customerPhone: prev.customerPhone || user.phone || "",
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
