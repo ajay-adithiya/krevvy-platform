@@ -12,9 +12,28 @@ const logger = new Logger('Bootstrap');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  let allowedOrigins: string[] = [];
+
+  if (process.env.CORS_ALLOWED_ORIGINS) {
+    allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    if (allowedOrigins.length === 0) {
+      throw new Error('CORS_ALLOWED_ORIGINS is required in production');
+    }
+  } else {
+    if (allowedOrigins.length === 0) {
+      allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+    }
+  }
+
   // ✅ Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -62,6 +81,9 @@ async function bootstrap() {
   });
 
   const port = Number(process.env.PORT) || 3000;
+
+  // ✅ Enable graceful shutdown hooks for production deployment
+  app.enableShutdownHooks();
 
   await app.listen(port);
 

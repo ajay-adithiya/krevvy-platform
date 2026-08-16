@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-
+import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import type { StringValue } from 'ms';
 
@@ -71,37 +71,51 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
-  this.logger.log(`Login attempt for email: ${email}`, AuthService.name);
+    this.logger.log(`Login attempt for email: ${email}`, AuthService.name);
 
-  const admin = await this.prisma.admin.findUnique({
-    where: { email },
-  });
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+    });
 
-  if (!admin) {
+    if (!admin) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
 
-    throw new UnauthorizedException("Invalid email or password");
-  }
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
 
-  const isPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
 
+    const payload = {
+      sub: admin.id,
+      email: admin.email,
+    };
 
-  if (!isPasswordValid) {
+    const accessToken = await this.jwtService.signAsync(payload);
 
-    throw new UnauthorizedException("Invalid email or password");
-  }
+    const plaintextRefreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshTokenHash = await bcrypt.hash(plaintextRefreshToken, 10);
+    const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-  const payload = {
-    sub: admin.id,
-    email: admin.email,
-  };
+    const session = await this.prisma.adminSession.create({
+      data: {
+        adminId: admin.id,
+        refreshTokenHash,
+        expiresAt: sessionExpiresAt,
+      },
+    });
 
-  const accessToken = await this.jwtService.signAsync(payload);
+    const refreshPayload = {
+      ...payload,
+      sessionId: session.id,
+      secret: plaintextRefreshToken,
+    };
 
-
-  const refreshToken = await this.jwtService.signAsync(payload, {
-    secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
-    expiresIn: this.configService.getOrThrow("jwt.refreshExpiresIn") as StringValue,
-  });
+    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
+      secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
+      expiresIn: '7d',
+    });
 
     return {
       accessToken,
@@ -116,12 +130,37 @@ export class AuthService {
         secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
       });
 
+      if (!payload.sessionId || !payload.secret) {
+        throw new UnauthorizedException('Invalid token structure');
+      }
+
+      const session = await this.prisma.adminSession.findUnique({
+        where: { id: payload.sessionId },
+      });
+
+      if (!session) {
+        throw new UnauthorizedException('Session not found');
+      }
+
+      if (session.revokedAt) {
+        throw new UnauthorizedException('Session revoked');
+      }
+
+      if (session.expiresAt < new Date()) {
+        throw new UnauthorizedException('Session expired');
+      }
+
+      const isValid = await bcrypt.compare(payload.secret, session.refreshTokenHash);
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid session secret');
+      }
+
       const admin = await this.prisma.admin.findUnique({
         where: { id: payload.sub },
       });
 
-      if (!admin) {
-        throw new UnauthorizedException('Admin not found');
+      if (!admin || admin.id !== session.adminId) {
+        throw new UnauthorizedException('Admin mismatch');
       }
 
       const newPayload = {
@@ -130,9 +169,45 @@ export class AuthService {
       };
 
       const newAccessToken = await this.jwtService.signAsync(newPayload);
-      const newRefreshToken = await this.jwtService.signAsync(newPayload, {
+
+      const plaintextRefreshToken = crypto.randomBytes(32).toString('hex');
+      const refreshTokenHash = await bcrypt.hash(plaintextRefreshToken, 10);
+      const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      // Rotate session: revoke old and create new within a transaction
+      const newSession = await this.prisma.$transaction(async (tx) => {
+        const revokeResult = await tx.adminSession.updateMany({
+          where: {
+            id: session.id,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        });
+
+        if (revokeResult.count !== 1) {
+          throw new UnauthorizedException('Refresh token has already been used');
+        }
+
+        return tx.adminSession.create({
+          data: {
+            adminId: admin.id,
+            refreshTokenHash,
+            expiresAt: sessionExpiresAt,
+          },
+        });
+      });
+
+      const refreshPayload = {
+        ...newPayload,
+        sessionId: newSession.id,
+        secret: plaintextRefreshToken,
+      };
+
+      const newRefreshToken = await this.jwtService.signAsync(refreshPayload, {
         secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
-        expiresIn: this.configService.getOrThrow('jwt.refreshExpiresIn') as StringValue,
+        expiresIn: '7d',
       });
 
       return {
@@ -140,11 +215,29 @@ export class AuthService {
         refreshToken: newRefreshToken,
       };
     } catch (error) {
-      this.logger.warn(
-        'Refresh token validation failed',
-        AuthService.name,
-      );
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.warn('Refresh token validation failed', AuthService.name);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async logout(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
+      });
+
+      if (payload.sessionId) {
+        await this.prisma.adminSession.updateMany({
+          where: { id: payload.sessionId, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+      }
+    } catch (error) {
+      // Ignore if it's already invalid
+    }
+    return { success: true };
   }
 }

@@ -16,8 +16,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krevvy.com'),
   title: "Krevvy | Premium Consumer Products",
   description: "Discover our collection of premium, modern consumer products designed for the Indian lifestyle.",
+  openGraph: {
+    title: "Krevvy | Premium Consumer Products",
+    description: "Discover our collection of premium, modern consumer products designed for the Indian lifestyle.",
+    url: '/',
+    siteName: 'Krevvy',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Krevvy | Premium Consumer Products",
+    description: "Discover our collection of premium, modern consumer products designed for the Indian lifestyle.",
+  },
 };
 
 export default function RootLayout({

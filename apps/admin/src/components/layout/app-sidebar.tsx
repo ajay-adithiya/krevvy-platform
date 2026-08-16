@@ -9,6 +9,9 @@ import {
   LogOut,
   ShoppingCart,
 } from "lucide-react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 
 import {
   Sidebar,
@@ -51,6 +54,20 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const router = useRouter();
+  const { logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {}, { withCredentials: true });
+    } catch (error) {
+      console.error('Logout error', error);
+    } finally {
+      logout();
+      router.push("/login");
+    }
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="text-xl font-bold px-4 py-5">
@@ -82,7 +99,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
 
-                <SidebarMenuButton>
+                <SidebarMenuButton onClick={handleLogout}>
 
                   <LogOut size={18} />
                   <span>Logout</span>

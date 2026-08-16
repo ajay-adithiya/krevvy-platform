@@ -17,6 +17,7 @@ import { CategoryModule } from './category/category.module';
 import { ProductImageModule } from './product-image/product-image.module';
 import { OrdersModule } from './orders/orders.module';
 import { CustomersModule } from './customers/customers.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CustomersModule } from './customers/customers.module';
     }]),
     LoggerModule,
     PrismaModule,
+    HealthModule,
     AuthModule,
     ProductModule,
     CategoryModule,

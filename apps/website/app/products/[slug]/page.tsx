@@ -22,9 +22,37 @@ export async function generateMetadata({ params }: ProductDetailsPageProps): Pro
     };
   }
 
+  const description = product.shortDescription || product.description?.substring(0, 160) || "Premium Krevvy Product";
+  const primaryImage = product.images?.find((img) => img.isPrimary) || product.images?.[0];
+  const imageUrl = primaryImage?.imageUrl || "https://placehold.co/600x600?text=No+Image";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krevvy.com';
+
   return {
     title: `${product.name} | Krevvy`,
-    description: product.shortDescription || product.description?.substring(0, 160) || "Premium Krevvy Product",
+    description,
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
+    openGraph: {
+      title: `${product.name} | Krevvy`,
+      description,
+      url: `/products/${product.slug}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: primaryImage?.altText || product.name,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} | Krevvy`,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -41,8 +69,31 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
     .filter(p => p.isActive && p.id !== product.id && p.categoryId === product.categoryId)
     .slice(0, 4);
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krevvy.com';
+  const primaryImage = product.images?.find((img) => img.isPrimary) || product.images?.[0];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || product.shortDescription,
+    image: primaryImage?.imageUrl,
+    sku: product.id,
+    offers: {
+      '@type': 'Offer',
+      url: `${baseUrl}/products/${product.slug}`,
+      priceCurrency: 'INR',
+      price: product.price,
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
+
   return (
     <div className="flex-1 bg-background pt-8 pb-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8">
 
         {/* Breadcrumbs */}

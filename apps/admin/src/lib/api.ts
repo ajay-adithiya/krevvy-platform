@@ -2,7 +2,6 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
 } from "axios";
-import Cookies from "js-cookie";
 
 import { useAuthStore } from "@/store/auth.store";
 
@@ -17,6 +16,7 @@ type FailedRequest = {
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -39,7 +39,7 @@ function processQueue(
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = Cookies.get("accessToken");
+    const token = useAuthStore.getState().accessToken;
 
     if (token) {
       config.headers.set(
@@ -95,68 +95,16 @@ api.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const refreshToken = Cookies.get("refreshToken");
-
-    if (!refreshToken) {
-      processQueue(error, null);
-
-      useAuthStore.getState().logout();
-
-      Cookies.remove("accessToken", {
-        path: "/",
-      });
-
-      Cookies.remove("refreshToken", {
-        path: "/",
-      });
-
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
-
-      isRefreshing = false;
-
-      return Promise.reject(error);
-    }
-
     try {
       const refreshResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-        {
-          refreshToken,
-        },
+        {},
+        { withCredentials: true }
       );
 
-      const newAccessToken =
-        refreshResponse.data.data.accessToken;
+      const newAccessToken = refreshResponse.data.accessToken;
 
-      const newRefreshToken =
-        refreshResponse.data.data.refreshToken;
-
-      Cookies.set(
-        "accessToken",
-        newAccessToken,
-        {
-          expires: 7,
-          sameSite: "lax",
-          path: "/",
-        },
-      );
-
-      Cookies.set(
-        "refreshToken",
-        newRefreshToken,
-        {
-          expires: 7,
-          sameSite: "lax",
-          path: "/",
-        },
-      );
-
-      useAuthStore
-        .getState()
-        .setAccessToken(newAccessToken);
-
+      useAuthStore.getState().setAccessToken(newAccessToken);
       processQueue(null, newAccessToken);
 
       originalRequest.headers.set(
@@ -169,14 +117,6 @@ api.interceptors.response.use(
       processQueue(refreshError, null);
 
       useAuthStore.getState().logout();
-
-      Cookies.remove("accessToken", {
-        path: "/",
-      });
-
-      Cookies.remove("refreshToken", {
-        path: "/",
-      });
 
       if (typeof window !== "undefined") {
         window.location.href = "/login";

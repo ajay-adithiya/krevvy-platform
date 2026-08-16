@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 
 import { cn } from "@/lib/utils";
 import QueryProvider from "@/components/providers/query-provider";
+import AuthProvider from "@/components/providers/auth-provider";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -23,7 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

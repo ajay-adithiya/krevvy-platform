@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+  push:
+    branches: [ develop, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: krevvy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/krevvy_test?schema=public
+      PORT: 5000
+      NODE_ENV: test
+      JWT_SECRET: dummy_secret
+      JWT_REFRESH_SECRET: dummy_secret
+      JWT_CUSTOMER_SECRET: dummy_secret
+      JWT_CUSTOMER_REFRESH_SECRET: dummy_secret
+      RAZORPAY_KEY_ID: dummy_key
+      RAZORPAY_KEY_SECRET: dummy_secret
+      CLOUDINARY_CLOUD_NAME: dummy_cloud
+      CLOUDINARY_API_KEY: dummy_key
+      CLOUDINARY_API_SECRET: dummy_secret
+      SMTP_HOST: dummy_host
+      SMTP_PORT: 587
+      SMTP_USER: dummy_user
+      SMTP_PASSWORD: dummy_password
+      SMTP_FROM: dummy@example.com
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (API)
+        working-directory: ./apps/api
+        run: npm ci
+
+      - name: Prisma Generate (API)
+        working-directory: ./apps/api
+        run: npx prisma generate
+
+      - name: Prisma Migrate (API)
+        working-directory: ./apps/api
+        run: npx prisma migrate deploy
+
+      - name: Run Tests (API)
+        working-directory: ./apps/api
+        run: npm test -- --runInBand
+
+      - name: Build API
+        working-directory: ./apps/api
+        run: npm run build
+
+      - name: Start API in Background
+        working-directory: ./apps/api
+        run: |
+          node dist/main &
+          echo $! > api.pid
+
+      - name: Wait for API Readiness
+        run: |
+          echo "Waiting for API to become ready..."
+          for i in {1..30}; do
+            if curl -s -f http://localhost:5000/api/v1/health/live; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Waiting..."
+            sleep 1
+          done
+          if [ $i -eq 30 ]; then
+            echo "API failed to start in time."
+            exit 1
+          fi
+
+      - name: Install dependencies (Website)
+        working-directory: ./apps/website
+        run: npm ci
+
+      - name: Build Website
+        working-directory: ./apps/website
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+        run: npm run build
+
+      - name: Install dependencies (Admin)
+        working-directory: ./apps/admin
+        run: npm ci
+
+      - name: Build Admin
+        working-directory: ./apps/admin
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+        run: npm run build
+
+      - name: Cleanup API Process
+        if: always()
+        working-directory: ./apps/api
+        run: |
+          if [ -f api.pid ]; then
+            kill -9 $(cat api.pid) || true
+          fi

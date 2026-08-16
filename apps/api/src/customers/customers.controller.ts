@@ -35,6 +35,7 @@ export class CustomersController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/api/v1/customers/auth',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return { accessToken: result.accessToken };
@@ -57,6 +58,7 @@ export class CustomersController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/api/v1/customers/auth',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return { accessToken: result.accessToken };

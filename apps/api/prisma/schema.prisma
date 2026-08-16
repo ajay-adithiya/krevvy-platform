@@ -14,6 +14,19 @@ model Admin {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sessions  AdminSession[]
+}
+
+model AdminSession {
+  id               String    @id @default(cuid())
+  adminId          String
+  admin            Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Customer {

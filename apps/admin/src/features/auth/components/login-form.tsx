@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +21,6 @@ export default function LoginForm() {
     (state) => state.setAccessToken,
   );
 
-
   const {
     register,
     handleSubmit,
@@ -34,25 +32,11 @@ export default function LoginForm() {
   async function onSubmit(data: LoginSchema) {
     try {
       const response = await login(data);
-
-      const accessToken = response.data.data.accessToken;
-      const refreshToken = response.data.data.refreshToken;
-
-      Cookies.set("accessToken", accessToken, {
-        expires: 7,
-        sameSite: "lax",
-        path: "/",
-      });
-
-      Cookies.set("refreshToken", refreshToken, {
-        expires: 7,
-        sameSite: "lax",
-        path: "/",
-      });
+      const accessToken = response.data.accessToken || response.data.data?.accessToken;
 
       setAccessToken(accessToken);
 
-      router.push("/dashboard");
+      router.push("/dashboard/orders");
     } catch (error: any) {
       console.error(error);
 
