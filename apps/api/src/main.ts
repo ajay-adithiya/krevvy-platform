@@ -85,7 +85,7 @@ async function bootstrap() {
   // ✅ Enable graceful shutdown hooks for production deployment
   app.enableShutdownHooks();
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Swagger is available at: http://localhost:${port}/api/v1/docs`);
