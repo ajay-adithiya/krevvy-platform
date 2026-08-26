@@ -63,13 +63,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         throw new Error(data.message || 'Invalid or expired OTP');
       }
 
-      const data = await res.json();
-      setTokens({ accessToken: data.accessToken });
+      const response = await res.json();
+      const accessToken = response.data.accessToken;
+
+      setTokens({ accessToken });
 
       // Fetch profile
       const profileRes = await fetch(`${API_BASE_URL}/customers/me`, {
-        headers: { Authorization: `Bearer ${data.accessToken}` }
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        credentials: 'include',
       });
+
       if (profileRes.ok) {
         const profile = await profileRes.json();
         useAuthStore.getState().setUser(profile);

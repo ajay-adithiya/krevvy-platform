@@ -39,14 +39,16 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
         });
 
         if (refreshResponse.ok) {
-          const tokens = await refreshResponse.json();
-          store.setTokens({ accessToken: tokens.accessToken });
+          const response = await refreshResponse.json();
+          const accessToken = response.data.accessToken;
+
+          store.setTokens({ accessToken });
           isRefreshing = false;
-          onRefreshed(tokens.accessToken);
+          onRefreshed(accessToken);
 
           // Retry the initiating request
           const newHeaders = new Headers(options.headers || {});
-          newHeaders.set('Authorization', `Bearer ${tokens.accessToken}`);
+          newHeaders.set('Authorization', `Bearer ${accessToken}`);
           return fetch(`${API_BASE_URL}${url}`, {
             ...options,
             headers: newHeaders,

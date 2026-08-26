@@ -27,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (refreshRes.ok) {
-          const { accessToken } = await refreshRes.json();
+          const response = await refreshRes.json();
+          const accessToken = response.data.accessToken;
+
           setTokens({ accessToken });
 
           // Fetch user profile
