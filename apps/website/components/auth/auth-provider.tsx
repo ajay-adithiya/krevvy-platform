@@ -3,6 +3,9 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "../../store/auth.store";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setTokens, setUser, logout, isAuthenticated } = useAuthStore();
   const initAttempted = useRef(false);
@@ -18,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function initAuth() {
       try {
         // Try to refresh token on initial load
-        const refreshRes = await fetch("http://localhost:5000/api/v1/customers/auth/refresh", {
+        const refreshRes = await fetch(`${API_BASE_URL}/customers/auth/refresh`, {
           method: "POST",
           credentials: "include",
         });
@@ -28,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTokens({ accessToken });
 
           // Fetch user profile
-          const profileRes = await fetch("http://localhost:5000/api/v1/customers/me", {
+          const profileRes = await fetch(`${API_BASE_URL}/customers/me`, {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },

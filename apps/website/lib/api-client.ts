@@ -1,6 +1,7 @@
 import { useAuthStore } from '../store/auth.store';
 
-const API_BASE_URL = "http://localhost:5000/api/v1";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string | null) => void)[] = [];

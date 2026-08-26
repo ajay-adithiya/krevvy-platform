@@ -7,6 +7,9 @@ import { CartDrawer } from "../cart/cart-drawer";
 import { useAuthStore } from "../../store/auth.store";
 import { AuthModal } from "../auth/auth-modal";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -16,7 +19,7 @@ export function Header() {
 
   const logout = async () => {
     try {
-      await fetch("http://localhost:5000/api/v1/customers/auth/logout", {
+      await fetch(`${API_BASE_URL}/customers/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

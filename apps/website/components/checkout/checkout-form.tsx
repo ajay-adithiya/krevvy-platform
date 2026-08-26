@@ -12,6 +12,9 @@ interface CheckoutFormProps {
   validationError: string | null;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export function CheckoutForm({ validationData, validationError }: CheckoutFormProps) {
   const router = useRouter();
   const { items: cartItems, clearCart } = useCartStore();
@@ -80,7 +83,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
       // If we have a pending order, verify its authoritative backend status
       if (order && order.razorpayOrderId) {
         try {
-          const statusRes = await fetch(`http://localhost:5000/api/v1/orders/status/${order.razorpayOrderId}`);
+          const statusRes = await fetch(`${API_BASE_URL}/orders/status/${order.razorpayOrderId}`)
           if (statusRes.ok) {
             const statusData = await statusRes.json();
             const isExpired = statusData.expiresAt && new Date(statusData.expiresAt) < new Date();
@@ -123,7 +126,7 @@ export function CheckoutForm({ validationData, validationError }: CheckoutFormPr
         order_id: order.razorpayOrderId,
         handler: async function (response: any) {
           try {
-            const verifyRes = await fetch("http://localhost:5000/api/v1/orders/verify", {
+            const verifyRes = await fetch(`${API_BASE_URL}/orders/verify`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

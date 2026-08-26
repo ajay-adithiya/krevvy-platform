@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../store/auth.store';
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -24,7 +27,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/v1/customers/auth/request-otp', {
+      const res = await fetch(`${API_BASE_URL}/customers/auth/request-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -49,7 +52,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/v1/customers/auth/verify-otp', {
+      const res = await fetch(`${API_BASE_URL}/customers/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
@@ -64,7 +67,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setTokens({ accessToken: data.accessToken });
 
       // Fetch profile
-      const profileRes = await fetch('http://localhost:5000/api/v1/customers/me', {
+      const profileRes = await fetch(`${API_BASE_URL}/customers/me`, {
         headers: { Authorization: `Bearer ${data.accessToken}` }
       });
       if (profileRes.ok) {
