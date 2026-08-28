@@ -48,7 +48,6 @@ export function CategoryForm({
     resolver: zodResolver(createCategorySchema),
     defaultValues: {
       name: category?.name ?? "",
-      slug: category?.slug ?? "",
       description: category?.description ?? "",
       isActive: category?.isActive ?? true,
     },
@@ -58,21 +57,7 @@ export function CategoryForm({
     register("isActive");
   }, [register]);
 
-  const name = watch("name");
   const isActive = watch("isActive");
-
-  useEffect(() => {
-    if (mode === "create" && name) {
-      const generatedSlug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "");
-
-      setValue("slug", generatedSlug, {
-        shouldValidate: true,
-      });
-    }
-  }, [name, mode, setValue]);
 
   const onSubmit = async (
     values: CreateCategoryFormValues
@@ -105,19 +90,6 @@ export function CategoryForm({
         />
         {errors.name && (
           <p className="text-sm text-red-500">{errors.name.message}</p>
-        )}
-      </div>
-
-      {/* Slug */}
-      <div className="space-y-2">
-        <Label htmlFor="slug">Slug</Label>
-        <Input
-          id="slug"
-          placeholder="power-tools"
-          {...register("slug")}
-        />
-        {errors.slug && (
-          <p className="text-sm text-red-500">{errors.slug.message}</p>
         )}
       </div>
 
