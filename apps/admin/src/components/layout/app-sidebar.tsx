@@ -23,7 +23,22 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+
+const websiteItems = [
+  { title: "Global", url: "/dashboard/website/global" },
+  { title: "Home", url: "/dashboard/website/home" },
+  { title: "Products Page", url: "/dashboard/website/products" },
+  { title: "About", url: "/dashboard/website/about" },
+  { title: "Contact", url: "/dashboard/website/contact" },
+  { title: "FAQ", url: "/dashboard/website/faq" },
+  { title: "Navigation", url: "/dashboard/website/navigation" },
+  { title: "Footer", url: "/dashboard/website/footer" },
+  { title: "Media", url: "/dashboard/website/media" },
+];
 
 const items = [
   {
@@ -111,6 +126,27 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
 
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>WEBSITE CMS</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuSub>
+                  {websiteItems.map((item) => (
+                    <SidebarMenuSubItem key={item.title}>
+                      <SidebarMenuSubButton asChild>
+                        <Link href={item.url}>
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>

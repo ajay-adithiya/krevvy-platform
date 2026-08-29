@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, Sun, Moon } from 'lucide-react';
 import { ActiveView } from '../types';
 import Logo from './Logo';
+import { useGlobalContent } from '../contexts/GlobalContentContext';
 
 interface HeaderProps {
   activeView: ActiveView;
@@ -18,6 +19,7 @@ export default function Header({
   toggleDarkMode,
   onBuyClick
 }: HeaderProps) {
+  const { content, navigation } = useGlobalContent();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -34,24 +36,19 @@ export default function Header({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navItems: { label: string; view: ActiveView }[] = [
-    { label: 'Home', view: 'home' },
-    { label: 'Products', view: 'products' },
-    { label: 'About', view: 'about' },
-    { label: 'Contact', view: 'contact' },
-    { label: 'FAQ', view: 'faq' }
-  ];
-
-  const handleNavClick = (view: ActiveView) => {
-    setActiveView(view);
+  const handleNavClick = (view: string) => {
+    setActiveView(view as ActiveView);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const ctaLabel = content?.globalAmazonButtonLabel;
+  const logoUrl = content?.logoMedia?.url;
+
   return (
     <nav
       id="main-nav"
-      className={`fixed top-0 left-0 w-full z-90 transition-all duration-300 ${scrolled
+      className={`fixed top-0 left-0 w-full z-[90] transition-all duration-300 ${scrolled
         ? 'bg-pure-white/95 dark:bg-pure-black/95 backdrop-blur-md py-4 shadow-sm border-b border-hairline dark:border-neutral-800'
         : 'bg-pure-white/80 dark:bg-pure-black/80 backdrop-blur-sm py-6 border-b border-transparent'
         }`}
@@ -63,17 +60,21 @@ export default function Header({
           className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-copper/40 rounded-lg p-1"
           aria-label="Krevvy Home"
         >
-          <Logo className="h-16 w-auto" darkMode={darkMode} />
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-16 w-auto" />
+          ) : (
+            <Logo className="h-16 w-auto" darkMode={darkMode} />
+          )}
         </button>
 
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center space-x-8">
-          {navItems.map((item) => {
-            const isActive = activeView === item.view;
+          {navigation.map((item) => {
+            const isActive = activeView === item.targetView;
             return (
-              <li key={item.view}>
+              <li key={item.id}>
                 <button
-                  onClick={() => handleNavClick(item.view)}
+                  onClick={() => handleNavClick(item.targetView)}
                   className={`relative py-2 text-sm font-semibold tracking-wider uppercase transition-colors duration-200 focus:outline-none focus:text-copper cursor-pointer ${isActive
                     ? 'text-copper dark:text-primary-fixed-dim font-bold'
                     : 'text-secondary hover:text-pure-black dark:text-neutral-400 dark:hover:text-pure-white'
@@ -104,14 +105,15 @@ export default function Header({
             )}
           </button>
 
-          {/* Amazon Buy Button */}
-          <button
-            onClick={onBuyClick}
-            className="btn-secondary px-6 py-2.5 font-semibold text-sm inline-flex items-center gap-2 rounded-full cursor-pointer shadow-sm"
-          >
-            <span>Buy on Amazon</span>
-            <ShoppingCart className="w-4 h-4 text-copper" />
-          </button>
+          {ctaLabel && (
+            <button
+              onClick={onBuyClick}
+              className="btn-secondary px-6 py-2.5 font-semibold text-sm inline-flex items-center gap-2 rounded-full cursor-pointer shadow-sm"
+            >
+              <span>{ctaLabel}</span>
+              <ShoppingCart className="w-4 h-4 text-copper" />
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu & Theme Toggles */}
@@ -139,32 +141,34 @@ export default function Header({
 
       {/* Mobile Menu Drawer */}
       <div
-        className={`fixed inset-x-0 top-20 bg-pure-white dark:bg-pure-black border-b border-hairline dark:border-neutral-800 z-80 transition-all duration-300 md:hidden ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
+        className={`fixed inset-x-0 top-20 bg-pure-white dark:bg-pure-black border-b border-hairline dark:border-neutral-800 z-[80] transition-all duration-300 md:hidden ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
           }`}
       >
         <div className="px-6 py-8 flex flex-col space-y-5">
-          {navItems.map((item) => (
+          {navigation.map((item) => (
             <button
-              key={item.view}
-              onClick={() => handleNavClick(item.view)}
-              className={`w-full py-2.5 text-left text-base font-semibold tracking-wider uppercase border-b border-surface-container-low dark:border-neutral-800/50 pb-2 ${activeView === item.view
-                ? 'text-copper dark:text-primary-fixed-dim pl-2 border-l-2 border-l-copper pl-2'
+              key={item.id}
+              onClick={() => handleNavClick(item.targetView)}
+              className={`w-full py-2.5 text-left text-base font-semibold tracking-wider uppercase border-b border-surface-container-low dark:border-neutral-800/50 pb-2 ${activeView === item.targetView
+                ? 'text-copper dark:text-primary-fixed-dim pl-2 border-l-2 border-l-copper'
                 : 'text-secondary dark:text-neutral-400'
                 }`}
             >
               {item.label}
             </button>
           ))}
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onBuyClick();
-            }}
-            className="w-full btn-primary py-3 px-6 rounded-full font-semibold text-center flex items-center justify-center gap-2 text-sm mt-4 shadow-sm cursor-pointer"
-          >
-            <span>Buy on Amazon</span>
-            <ShoppingCart className="w-4 h-4" />
-          </button>
+          {ctaLabel && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onBuyClick();
+              }}
+              className="w-full btn-primary py-3 px-6 rounded-full font-semibold text-center flex items-center justify-center gap-2 text-sm mt-4 shadow-sm cursor-pointer"
+            >
+              <span>{ctaLabel}</span>
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </nav>

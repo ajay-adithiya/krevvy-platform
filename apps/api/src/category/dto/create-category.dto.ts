@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
+  IsInt,
 } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -27,4 +28,9 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  // Website-v1 Additive Fields
+  @ApiProperty({ required: false }) @IsOptional() @IsString() displayLabel?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() iconName?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsInt() displayOrder?: number;
 }

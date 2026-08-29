@@ -9,6 +9,8 @@ import { LoggerService } from '../common/logger/logger.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+import * as Repeatables from './dto/product-repeatables.dto';
+
 import { generateSlug } from '../common/utils/slug.util';
 
 @Injectable()
@@ -69,6 +71,14 @@ export class ProductService {
         isActive: createProductDto.isActive ?? true,
         categoryId: createProductDto.categoryId,
         stock: createProductDto.stock ?? 0,
+        tagline: createProductDto.tagline,
+        isNewArrival: createProductDto.isNewArrival,
+        isBestSeller: createProductDto.isBestSeller,
+        discountLabel: createProductDto.discountLabel,
+        ratingDisplay: createProductDto.ratingDisplay,
+        reviewCountDisplay: createProductDto.reviewCountDisplay,
+        primaryColorAccent: createProductDto.primaryColorAccent,
+        amazonButtonLabel: createProductDto.amazonButtonLabel,
       },
     });
 
@@ -84,7 +94,9 @@ export class ProductService {
     return this.prisma.product.findMany({
       include: {
         category: true,
-        images: true,
+        images: { orderBy: { displayOrder: 'asc' } },
+        features: { orderBy: { displayOrder: 'asc' } },
+        specifications: { orderBy: { displayOrder: 'asc' } },
       },
       orderBy: {
         createdAt: 'desc',
@@ -97,7 +109,9 @@ export class ProductService {
       where: { id },
       include: {
         category: true,
-        images: true,
+        images: { orderBy: { displayOrder: 'asc' } },
+        features: { orderBy: { displayOrder: 'asc' } },
+        specifications: { orderBy: { displayOrder: 'asc' } },
       },
     });
 
@@ -152,5 +166,27 @@ export class ProductService {
       id: product.id,
       message: 'Product deleted successfully',
     };
+  }
+
+  // --- FEATURES ---
+  async createFeature(dto: Repeatables.CreateProductFeatureDto) {
+    return this.prisma.productFeature.create({ data: dto });
+  }
+  async updateFeature(id: string, dto: Repeatables.UpdateProductFeatureDto) {
+    return this.prisma.productFeature.update({ where: { id }, data: dto });
+  }
+  async removeFeature(id: string) {
+    return this.prisma.productFeature.delete({ where: { id } });
+  }
+
+  // --- SPECS ---
+  async createSpecification(dto: Repeatables.CreateProductSpecificationDto) {
+    return this.prisma.productSpecification.create({ data: dto });
+  }
+  async updateSpecification(id: string, dto: Repeatables.UpdateProductSpecificationDto) {
+    return this.prisma.productSpecification.update({ where: { id }, data: dto });
+  }
+  async removeSpecification(id: string) {
+    return this.prisma.productSpecification.delete({ where: { id } });
   }
 }

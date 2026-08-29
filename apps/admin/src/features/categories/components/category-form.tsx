@@ -50,6 +50,9 @@ export function CategoryForm({
       name: category?.name ?? "",
       description: category?.description ?? "",
       isActive: category?.isActive ?? true,
+      displayLabel: category?.displayLabel ?? "",
+      iconName: category?.iconName ?? "",
+      displayOrder: category?.displayOrder ?? 0,
     },
   });
 
@@ -107,6 +110,22 @@ export function CategoryForm({
             {errors.description.message}
           </p>
         )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="displayLabel">Display Label</Label>
+          <Input id="displayLabel" {...register("displayLabel")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="displayOrder">Display Order</Label>
+          <Input id="displayOrder" type="number" {...register("displayOrder", { valueAsNumber: true })} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="iconName">Icon Name (lucide)</Label>
+        <Input id="iconName" {...register("iconName")} placeholder="e.g. tag" />
       </div>
 
       {/* Active Status */}

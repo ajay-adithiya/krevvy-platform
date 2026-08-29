@@ -18,6 +18,7 @@ import { ProductImageModule } from './product-image/product-image.module';
 import { OrdersModule } from './orders/orders.module';
 import { CustomersModule } from './customers/customers.module';
 import { HealthModule } from './health/health.module';
+import { CmsModule } from './cms/cms.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { HealthModule } from './health/health.module';
     ProductImageModule,
     OrdersModule,
     CustomersModule,
+    CmsModule,
   ],
 })
 export class AppModule {}

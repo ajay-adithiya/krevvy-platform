@@ -78,4 +78,14 @@ export class CreateProductDto {
   })
   @IsString()
   categoryId!: string;
+
+  // Website-v1 Additive Fields
+  @ApiProperty({ required: false }) @IsOptional() @IsString() tagline?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsBoolean() isNewArrival?: boolean;
+  @ApiProperty({ required: false }) @IsOptional() @IsBoolean() isBestSeller?: boolean;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() discountLabel?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber() ratingDisplay?: number;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber() reviewCountDisplay?: number;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() primaryColorAccent?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() amazonButtonLabel?: string;
 }

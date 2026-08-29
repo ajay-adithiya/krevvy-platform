@@ -14,6 +14,9 @@ export const createCategorySchema = z.object({
     .optional(),
 
   isActive: z.boolean(),
+  displayLabel: z.string().optional(),
+  iconName: z.string().optional(),
+  displayOrder: z.number().int().optional(),
 });
 
 export type CreateCategoryFormValues = z.infer<

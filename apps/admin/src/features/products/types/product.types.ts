@@ -1,3 +1,5 @@
+import { Category } from "@/features/categories/types/category.types";
+
 export interface Product {
   id: string;
   name: string;
@@ -11,11 +13,17 @@ export interface Product {
   isActive: boolean;
 
   categoryId: string;
-
-  category: {
-    id: string;
-    name: string;
-  };
+  category?: Category;
+  tagline?: string;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
+  discountLabel?: string;
+  ratingDisplay?: string;
+  reviewCountDisplay?: string;
+  primaryColorAccent?: string;
+  amazonButtonLabel?: string;
+  displayOrder?: number;
+  createdAt: string;
 
   images?: {
     id: string;

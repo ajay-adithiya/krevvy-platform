@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Star, HelpCircle, ChevronRight, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActiveView } from './types';
 
@@ -12,16 +11,18 @@ import Contact from './components/Contact';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import AmazonModal from './components/AmazonModal';
+import { useGlobalContent } from './contexts/GlobalContentContext';
 
 export default function App() {
+  const { content, loading } = useGlobalContent();
   const [activeView, setActiveView] = useState<ActiveView>('home');
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<{ name: string; price: string; url: string }>({
-    name: "Krevvy Aero Aura",
-    price: "$349.00",
-    url: "https://www.amazon.com/s?k=krevvy+air+purifier"
+    name: "",
+    price: "",
+    url: ""
   });
 
   const handleSearch = (query: string) => {
@@ -68,11 +69,15 @@ export default function App() {
   // Default handler for general Amazon CTA button
   const triggerDefaultAmazonModal = () => {
     triggerAmazonModal(
-      "Krevvy Aero Aura Smart Purifier",
-      "$349.00",
-      "https://www.amazon.com/s?k=krevvy+air+purifier"
+      content?.defaultAmazonProductId || "",
+      "",
+      content?.defaultAmazonProductId ? `https://www.amazon.com/dp/${content.defaultAmazonProductId}` : ""
     );
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-pure-white dark:bg-pure-black text-pure-black dark:text-pure-white"><div className="animate-pulse">Loading...</div></div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-pure-white dark:bg-pure-black text-pure-black dark:text-pure-white transition-colors duration-500 overflow-x-hidden selection:bg-copper selection:text-white">
@@ -102,7 +107,7 @@ export default function App() {
             {/* Catalog Page */}
             {activeView === 'products' && (
               <Products 
-                onBuyProduct={triggerAmazonModal} 
+                onBuyProduct={(product) => triggerAmazonModal(product.name, String(product.price), product.amazonUrl || '')}
                 searchQuery={searchQuery} 
                 setSearchQuery={setSearchQuery} 
               />

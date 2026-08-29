@@ -2,16 +2,31 @@ import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, HelpCircle, CheckCircle, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FeedbackMessage } from '../types';
+import { useFetch } from '../hooks/useFetch';
+import { api } from '../lib/api';
+import { useGlobalContent } from '../contexts/GlobalContentContext';
 
 export default function Contact() {
+  const { content: globalContent } = useGlobalContent();
+  const { data: contactData, loading: dataLoading } = useFetch(api.getContactContent);
+  const contactContent = contactData?.content;
+  const inquiryOptions = contactData?.inquiryOptions || [];
+
   const [form, setForm] = useState<FeedbackMessage>({
     name: '',
     email: '',
     phone: '',
-    subject: 'product_inquiry',
+    subject: inquiryOptions.length > 0 ? inquiryOptions[0].value : 'product_inquiry',
     message: '',
     newsletter: true
   });
+
+  // Update default subject when inquiryOptions load
+  React.useEffect(() => {
+    if (inquiryOptions.length > 0 && form.subject === 'product_inquiry' && !inquiryOptions.some(opt => opt.value === 'product_inquiry')) {
+      setForm(prev => ({ ...prev, subject: inquiryOptions[0].value }));
+    }
+  }, [inquiryOptions]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -20,7 +35,7 @@ export default function Contact() {
   // Handle Input Changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setForm(prev => ({ ...prev, [name]: checked }));
@@ -75,7 +90,7 @@ export default function Contact() {
     if (!validateForm()) return;
 
     setLoading(true);
-    
+
     // Simulate premium server-side handler
     setTimeout(() => {
       setLoading(false);
@@ -84,50 +99,77 @@ export default function Contact() {
         name: '',
         email: '',
         phone: '',
-        subject: 'product_inquiry',
+        subject: inquiryOptions.length > 0 ? inquiryOptions[0].value : 'product_inquiry',
         message: '',
         newsletter: true
       });
     }, 1200);
   };
 
+  if (dataLoading) {
+    return (
+      <section className="py-24 md:py-32 px-6 md:px-12 bg-surface-container-lowest dark:bg-[#0a0a0a] transition-colors duration-500">
+        <div className="max-w-6xl mx-auto animate-pulse flex flex-col items-center">
+          <div className="h-4 w-32 bg-surface-container rounded-full mb-4"></div>
+          <div className="h-10 w-64 bg-surface-container rounded-full mb-4"></div>
+          <div className="h-4 w-48 bg-surface-container rounded-full"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!contactContent) {
+    return (
+      <section className="py-24 md:py-32 px-6 md:px-12 bg-surface-container-lowest dark:bg-[#0a0a0a] transition-colors duration-500">
+        <div className="max-w-6xl mx-auto text-center text-secondary dark:text-neutral-500">Contact content is currently empty.</div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-24 md:py-32 px-6 md:px-12 bg-surface-container-lowest dark:bg-[#0a0a0a] transition-colors duration-500">
       <div className="max-w-6xl mx-auto">
-        
+
         {/* Header Title */}
         <div className="text-center md:text-left mb-16">
           <span className="text-xs font-mono tracking-widest uppercase text-copper dark:text-primary-fixed-dim font-bold">
-            CONCIERGE COMMUNICATIONS
+            {contactContent.pageEyebrow}
           </span>
-          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-pure-black dark:text-pure-white mt-2 leading-tight">
-            Consult With Our Team.
-          </h2>
-          <p className="font-sans text-secondary dark:text-neutral-400 text-sm md:text-base max-w-xl mt-3">
-            Whether you require tailored product advice, order tracking, or warranty concierge assistance, our engineering squad is ready to assist.
+          <h2
+            className="font-display text-3xl md:text-5xl font-bold tracking-tight text-pure-black dark:text-pure-white mt-2 leading-tight"
+            dangerouslySetInnerHTML={{ __html: (contactContent.pageTitle || "").replace(/\n/g, '<br />') }}
+          />
+          <p className="font-sans text-secondary dark:text-neutral-400 text-sm md:text-base max-w-xl mt-3 whitespace-pre-wrap">
+            {contactContent.pageSubtitle}
           </p>
         </div>
 
         {/* Contact Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          
+
           {/* Column 1: Info and Cards */}
           <div className="lg:col-span-5 space-y-8 text-left">
-            
+
             {/* Quick Contact Info */}
             <div className="p-8 rounded-xl border border-hairline dark:border-neutral-800 bg-pure-white dark:bg-neutral-900/30 shadow-sm space-y-6">
-              <h3 className="font-display font-semibold text-lg text-pure-black dark:text-pure-white">
-                Direct Touchpoints
-              </h3>
-              
+              {contactContent.contactTouchpointsHeading && (
+                <h3 className="font-display font-semibold text-lg text-pure-black dark:text-pure-white">
+                  {contactContent.contactTouchpointsHeading}
+                </h3>
+              )}
+
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-amber-50 dark:bg-amber-950/20 text-copper mt-0.5">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">Concierge Helpline</h4>
-                  <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">+1 (800) 955-KREV</p>
-                  <p className="text-xs text-tertiary dark:text-neutral-500 mt-0.5">Mon–Fri, 9:00 AM – 6:00 PM EST</p>
+                  {contactContent.contactPhoneHeading && (
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">{contactContent.contactPhoneHeading}</h4>
+                  )}
+                  {globalContent?.contactPhone && (
+                    <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">{globalContent.contactPhone}</p>
+                  )}
+                  <p className="text-xs text-tertiary dark:text-neutral-500 mt-0.5">{globalContent?.businessHours}</p>
                 </div>
               </div>
 
@@ -136,8 +178,12 @@ export default function Contact() {
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">Support Mailroom</h4>
-                  <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">concierge@krevvy.com</p>
+                  {contactContent.contactEmailHeading && (
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">{contactContent.contactEmailHeading}</h4>
+                  )}
+                  {globalContent?.contactEmail && (
+                    <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">{globalContent.contactEmail}</p>
+                  )}
                   <p className="text-xs text-tertiary dark:text-neutral-500 mt-0.5">We respond within 12 business hours.</p>
                 </div>
               </div>
@@ -147,30 +193,41 @@ export default function Contact() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">HQ Enterprise Coordinates</h4>
-                  <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">Prowess Click Kart Enterprise</p>
-                  <p className="text-xs text-tertiary dark:text-neutral-500 mt-0.5">1407 Premium tech park, Sector 5, Bangalore, India</p>
+                  {contactContent.contactAddressHeading && (
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-secondary dark:text-neutral-400">{contactContent.contactAddressHeading}</h4>
+                  )}
+                  {globalContent?.companyName && (
+                    <p className="text-sm font-semibold text-pure-black dark:text-pure-white mt-1">{globalContent.companyName}</p>
+                  )}
+                  <p className="text-xs text-tertiary dark:text-neutral-500 mt-0.5 whitespace-pre-wrap">{globalContent?.contactAddress}</p>
                 </div>
               </div>
             </div>
 
             {/* Warranty Reminder Card */}
-            <div className="p-8 rounded-xl border border-hairline/60 dark:border-neutral-800 bg-surface dark:bg-neutral-900/10 text-left">
-              <h4 className="font-display font-semibold text-base text-pure-black dark:text-pure-white flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-copper" />
-                Purchased on Amazon?
-              </h4>
-              <p className="text-xs text-tertiary dark:text-neutral-400 mt-2 leading-relaxed">
-                If you recently acquired your Krevvy device through our official Amazon partner channel, make sure to activate your 3-Year Extended Warranty. Send your Order ID and name in this form to initiate automatic registry.
-              </p>
-            </div>
+            {(contactContent.warrantyHeading || contactContent.warrantyText) && (
+              <div className="p-8 rounded-xl border border-hairline/60 dark:border-neutral-800 bg-surface dark:bg-neutral-900/10 text-left">
+                <h4 className="font-display font-semibold text-base text-pure-black dark:text-pure-white flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-copper" />
+                  {contactContent.warrantyHeading}
+                </h4>
+                <p className="text-xs text-tertiary dark:text-neutral-400 mt-2 leading-relaxed whitespace-pre-wrap">
+                  {contactContent.warrantyText}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Column 2: Form Wrapper */}
           <div className="lg:col-span-7 bg-pure-white dark:bg-neutral-900/20 rounded-2xl p-8 md:p-10 border border-hairline dark:border-neutral-800 shadow-sm">
+            {contactContent.formHeading && (
+              <h3 className="font-display font-semibold text-2xl text-pure-black dark:text-pure-white mb-6">
+                {contactContent.formHeading}
+              </h3>
+            )}
             <AnimatePresence mode="wait">
               {!submitted ? (
-                <motion.form 
+                <motion.form
                   key="contact-form"
                   onSubmit={handleSubmit}
                   noValidate
@@ -182,7 +239,7 @@ export default function Contact() {
                   {/* Name field */}
                   <div>
                     <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-pure-black dark:text-pure-white mb-2">
-                      Full Name <span className="text-copper">*</span>
+                      {contactContent.formNameLabel} <span className="text-copper">*</span>
                     </label>
                     <input
                       type="text"
@@ -191,8 +248,8 @@ export default function Contact() {
                       value={form.name}
                       onChange={handleChange}
                       className={`w-full bg-surface dark:bg-neutral-900 px-4 py-3.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-copper/30 ${
-                        errors.name 
-                          ? 'border-error/60 focus:border-error' 
+                        errors.name
+                          ? 'border-error/60 focus:border-error'
                           : 'border-hairline dark:border-neutral-800 focus:border-pure-black dark:focus:border-pure-white'
                       }`}
                       placeholder="e.g., Srisanjai Kumar"
@@ -209,7 +266,7 @@ export default function Contact() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-pure-black dark:text-pure-white mb-2">
-                        Email Address <span className="text-copper">*</span>
+                        {contactContent.formEmailLabel} <span className="text-copper">*</span>
                       </label>
                       <input
                         type="email"
@@ -218,12 +275,12 @@ export default function Contact() {
                         value={form.email}
                         onChange={handleChange}
                         className={`w-full bg-surface dark:bg-neutral-900 px-4 py-3.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-copper/30 ${
-                          errors.email 
-                            ? 'border-error/60 focus:border-error' 
+                          errors.email
+                            ? 'border-error/60 focus:border-error'
                             : 'border-hairline dark:border-neutral-800 focus:border-pure-black dark:focus:border-pure-white'
                         }`}
                         placeholder="sanjai@example.com"
-                      />
+                    />
                       {errors.email && (
                         <p className="text-xs text-error mt-1.5 flex items-center gap-1">
                           <AlertTriangle className="w-3.5 h-3.5" />
@@ -234,7 +291,7 @@ export default function Contact() {
 
                     <div>
                       <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-pure-black dark:text-pure-white mb-2">
-                        Phone Number
+                        {contactContent.formPhoneLabel}
                       </label>
                       <input
                         type="tel"
@@ -259,7 +316,7 @@ export default function Contact() {
                   {/* Subject select */}
                   <div>
                     <label htmlFor="subject" className="block text-xs font-bold uppercase tracking-wider text-pure-black dark:text-pure-white mb-2">
-                      Inquiry Category
+                      {contactContent.formSubjectLabel}
                     </label>
                     <select
                       id="subject"
@@ -268,17 +325,16 @@ export default function Contact() {
                       onChange={handleChange}
                       className="w-full bg-surface dark:bg-neutral-900 px-4 py-3.5 rounded-lg border border-hairline dark:border-neutral-800 focus:border-pure-black dark:focus:border-pure-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-copper/30"
                     >
-                      <option value="product_inquiry">Pre-Purchase Consultation</option>
-                      <option value="amazon_support">Amazon Order &amp; Delivery Help</option>
-                      <option value="warranty_registry">Extended Warranty Activation</option>
-                      <option value="technical_feedback">Technical Engineering Feedback</option>
+                      {inquiryOptions.map((option) => (
+                        <option key={option.id} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Message textarea */}
                   <div>
                     <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-pure-black dark:text-pure-white mb-2">
-                      Message Content <span className="text-copper">*</span>
+                      {contactContent.formMessageLabel} <span className="text-copper">*</span>
                     </label>
                     <textarea
                       id="message"
@@ -287,8 +343,8 @@ export default function Contact() {
                       value={form.message}
                       onChange={handleChange}
                       className={`w-full bg-surface dark:bg-neutral-900 px-4 py-3.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-copper/30 ${
-                        errors.message 
-                          ? 'border-error/60 focus:border-error' 
+                        errors.message
+                          ? 'border-error/60 focus:border-error'
                           : 'border-hairline dark:border-neutral-800 focus:border-pure-black dark:focus:border-pure-white'
                       }`}
                       placeholder="Please details your questions, tech requests, or Amazon Order IDs..."
@@ -328,18 +384,18 @@ export default function Contact() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Transmitting...
+                        {contactContent.formLoadingMessage}
                       </span>
                     ) : (
                       <>
-                        <span>Send Transmission</span>
+                        <span>{contactContent.formSubmitLabel}</span>
                         <Send className="w-4 h-4" />
                       </>
                     )}
                   </button>
                 </motion.form>
               ) : (
-                <motion.div 
+                <motion.div
                   key="success-card"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -350,17 +406,23 @@ export default function Contact() {
                     <CheckCircle className="w-12 h-12" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-display font-bold text-2xl text-pure-black dark:text-pure-white">
-                      Transmission Successful
-                    </h3>
-                    <p className="text-sm text-tertiary dark:text-neutral-400 max-w-md mx-auto">
-                      Thank you. Your inquiry has been routed to our technical support desk. A Krevvy engineer will contact you shortly.
-                    </p>
+                    {contactContent.formSuccessMessage && (
+                      <h3 className="font-display font-bold text-2xl text-pure-black dark:text-pure-white">
+                        {contactContent.formSuccessMessage}
+                      </h3>
+                    )}
+                    {contactContent.formFailureMessage && (
+                      <p className="text-sm text-tertiary dark:text-neutral-400 max-w-md mx-auto whitespace-pre-wrap">
+                        {contactContent.formFailureMessage}
+                      </p>
+                    )}
                   </div>
-                  
-                  <div className="pt-4 border-t border-hairline dark:border-neutral-800/80 max-w-sm mx-auto text-xs text-tertiary dark:text-neutral-500">
-                    Ticket Reference Code: <span className="font-mono text-pure-black dark:text-pure-white font-bold">#KRV-{Math.floor(Math.random() * 90000) + 10000}</span>
-                  </div>
+
+                  {contactContent.successTicketPrefixLabel && (
+                    <div className="pt-4 border-t border-hairline dark:border-neutral-800/80 max-w-sm mx-auto text-xs text-tertiary dark:text-neutral-500">
+                      {contactContent.successTicketPrefixLabel} <span className="font-mono text-pure-black dark:text-pure-white font-bold">#KRV-{Math.floor(Math.random() * 90000) + 10000}</span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => setSubmitted(false)}

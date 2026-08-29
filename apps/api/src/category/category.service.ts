@@ -52,6 +52,9 @@ export class CategoryService {
         slug,
         description: createCategoryDto.description,
         isActive: createCategoryDto.isActive ?? true,
+        displayLabel: createCategoryDto.displayLabel,
+        iconName: createCategoryDto.iconName,
+        displayOrder: createCategoryDto.displayOrder,
       },
     });
 
@@ -66,7 +69,7 @@ export class CategoryService {
   async findAll() {
     return this.prisma.category.findMany({
       orderBy: {
-        createdAt: 'desc',
+        displayOrder: 'asc',
       },
     });
   }
