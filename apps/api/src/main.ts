@@ -12,28 +12,16 @@ const logger = new Logger('Bootstrap');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
-  let allowedOrigins: string[] = [];
-
-  if (process.env.CORS_ALLOWED_ORIGINS) {
-    allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter((origin) => origin.length > 0);
-  }
-
-  if (process.env.NODE_ENV === 'production') {
-    if (allowedOrigins.length === 0) {
-      throw new Error('CORS_ALLOWED_ORIGINS is required in production');
-    }
-  } else {
-    if (allowedOrigins.length === 0) {
-      allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
-    }
-  }
-
   // ✅ Enable CORS
   app.enableCors({
-    origin: allowedOrigins,
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://www.krevvy.in',
+      'https://krevvy.in',
+      'https://krevvy-platform.vercel.app',
+      'https://krevvy-platform-4uiq3buv4-ajayadithiya001-6649s-projects.vercel.app',
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
