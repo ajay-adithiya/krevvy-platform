@@ -21,6 +21,7 @@ async function bootstrap() {
       'https://krevvy.in',
       'https://krevvy-platform.vercel.app',
       'https://krevvy-platform-4uiq3buv4-ajayadithiya001-6649s-projects.vercel.app',
+      'https://admin.krevvy.in',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
