@@ -35,7 +35,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!isInitializing) {
-      if (!isAuthenticated && !pathname.includes("/login")) {
+      const isPublicRoute =
+        pathname.includes("/login") ||
+        pathname.includes("/forgot-password") ||
+        pathname.includes("/reset-password");
+
+      if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
       }
       if (isAuthenticated && pathname.includes("/login")) {
