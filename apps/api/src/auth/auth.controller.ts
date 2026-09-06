@@ -144,7 +144,7 @@ export class AuthController {
   @ResponseMessage('Email updated successfully')
   @ApiOperation({ summary: 'Change admin email' })
   changeEmail(@Req() req: any, @Body() dto: ChangeEmailDto) {
-    return this.authService.changeEmail(req.user.sub, dto);
+    return this.authService.changeEmail(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -153,7 +153,7 @@ export class AuthController {
   @ResponseMessage('Password updated successfully')
   @ApiOperation({ summary: 'Change admin password' })
   changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(req.user.sub, dto);
+    return this.authService.changePassword(req.user.id, dto);
   }
 
   @Post('forgot-password')

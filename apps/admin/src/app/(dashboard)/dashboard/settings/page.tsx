@@ -134,7 +134,7 @@ export default function SettingsPage() {
           <form onSubmit={handleEmailChange} className="space-y-4">
             <div className="space-y-2">
               <Label>Current Email</Label>
-              <Input value={currentEmail} disabled />
+              <Input value={currentEmail} readOnly />
             </div>
             
             <div className="space-y-2">
