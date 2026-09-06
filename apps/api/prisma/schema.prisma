@@ -12,9 +12,10 @@ model Admin {
   email    String @unique
   password String
 
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  sessions  AdminSession[]
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  sessions    AdminSession[]
+  resetTokens AdminPasswordResetToken[]
 }
 
 model AdminSession {
@@ -28,6 +29,18 @@ model AdminSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model AdminPasswordResetToken {
+  id        String    @id @default(cuid())
+  adminId   String
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime  @default(now())
+}
+
 
 model Customer {
   id       String            @id @default(cuid())

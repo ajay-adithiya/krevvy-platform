@@ -10,9 +10,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 
 
+import { CustomersModule } from '../customers/customers.module';
+
 @Module({
  imports: [
   ConfigModule,
+  CustomersModule,
 
   PassportModule.register({
     defaultStrategy: 'jwt',

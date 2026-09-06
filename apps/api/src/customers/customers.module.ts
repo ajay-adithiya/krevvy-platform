@@ -17,6 +17,6 @@ import { CustomerJwtStrategy } from './strategies/customer-jwt.strategy';
   ],
   controllers: [CustomersController],
   providers: [CustomersService, EmailService, CustomerJwtStrategy],
-  exports: [CustomersService, CustomerJwtStrategy, PassportModule],
+  exports: [CustomersService, CustomerJwtStrategy, PassportModule, EmailService],
 })
 export class CustomersModule {}

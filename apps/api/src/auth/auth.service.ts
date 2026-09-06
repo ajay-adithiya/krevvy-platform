@@ -12,7 +12,12 @@ import type { StringValue } from 'ms';
 
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangeEmailDto } from './dto/change-email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginResponse } from './interfaces/login-response.interface';
+import { EmailService } from '../customers/email.service';
 
 import { LoggerService } from '../common/logger/logger.service';
 
@@ -23,6 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
+    private readonly emailService: EmailService,
   ) {}
 
   async registerAdmin(registerDto: RegisterAdminDto) {
@@ -239,5 +245,125 @@ export class AuthService {
       // Ignore if it's already invalid
     }
     return { success: true };
+  }
+
+  async changeEmail(adminId: string, dto: ChangeEmailDto) {
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) {
+      throw new UnauthorizedException('Admin not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.currentPassword, admin.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid current password');
+    }
+
+    const normalizedEmail = dto.newEmail.toLowerCase().trim();
+
+    const existingEmail = await this.prisma.admin.findUnique({ where: { email: normalizedEmail } });
+    if (existingEmail && existingEmail.id !== adminId) {
+      throw new ConflictException('Email already in use');
+    }
+
+    await this.prisma.admin.update({
+      where: { id: adminId },
+      data: { email: normalizedEmail },
+    });
+
+    return { success: true, message: 'Email updated successfully' };
+  }
+
+  async changePassword(adminId: string, dto: ChangePasswordDto) {
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) {
+      throw new UnauthorizedException('Admin not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.currentPassword, admin.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid current password');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.admin.update({
+        where: { id: adminId },
+        data: { password: hashedPassword },
+      });
+
+      await tx.adminSession.updateMany({
+        where: { adminId: adminId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    });
+
+    return { success: true, message: 'Password updated successfully' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const email = dto.email.toLowerCase().trim();
+    const admin = await this.prisma.admin.findUnique({ where: { email } });
+    
+    // Always return success to prevent email enumeration
+    if (!admin) {
+      this.logger.warn(`Forgot password requested for non-existent admin email: ${email}`, AuthService.name);
+      return { success: true, message: 'If that email address is in our database, we will send you an email to reset your password.' };
+    }
+
+    // Invalidate previously active tokens
+    await this.prisma.adminPasswordResetToken.updateMany({
+      where: { adminId: admin.id, usedAt: null, expiresAt: { gt: new Date() } },
+      data: { usedAt: new Date() },
+    });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    await this.prisma.adminPasswordResetToken.create({
+      data: {
+        adminId: admin.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    await this.emailService.sendAdminPasswordResetEmail(email, resetToken);
+
+    return { success: true, message: 'If that email address is in our database, we will send you an email to reset your password.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const tokenHash = crypto.createHash('sha256').update(dto.token).digest('hex');
+
+    const resetTokenRecord = await this.prisma.adminPasswordResetToken.findFirst({
+      where: { tokenHash },
+    });
+
+    if (!resetTokenRecord || resetTokenRecord.usedAt || resetTokenRecord.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.admin.update({
+        where: { id: resetTokenRecord.adminId },
+        data: { password: hashedPassword },
+      });
+
+      await tx.adminPasswordResetToken.update({
+        where: { id: resetTokenRecord.id },
+        data: { usedAt: new Date() },
+      });
+
+      await tx.adminSession.updateMany({
+        where: { adminId: resetTokenRecord.adminId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    });
+
+    return { success: true, message: 'Password reset successfully' };
   }
 }

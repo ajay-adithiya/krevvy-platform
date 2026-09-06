@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Post,
+  Patch,
   Get,
   UseGuards,
   Req,
@@ -21,6 +22,10 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangeEmailDto } from './dto/change-email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -131,5 +136,37 @@ export class AuthController {
   @ResponseMessage('Profile fetched successfully')
   getProfile(@Req() req: any) {
       return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('email')
+  @ApiBearerAuth('access-token')
+  @ResponseMessage('Email updated successfully')
+  @ApiOperation({ summary: 'Change admin email' })
+  changeEmail(@Req() req: any, @Body() dto: ChangeEmailDto) {
+    return this.authService.changeEmail(req.user.sub, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('password')
+  @ApiBearerAuth('access-token')
+  @ResponseMessage('Password updated successfully')
+  @ApiOperation({ summary: 'Change admin password' })
+  changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.sub, dto);
+  }
+
+  @Post('forgot-password')
+  @ResponseMessage('Password reset email requested')
+  @ApiOperation({ summary: 'Request a password reset email' })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @ResponseMessage('Password reset successfully')
+  @ApiOperation({ summary: 'Reset password using token' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }
