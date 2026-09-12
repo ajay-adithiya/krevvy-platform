@@ -23,11 +23,27 @@ export interface Product {
   primaryColorAccent?: string;
   amazonButtonLabel?: string;
   displayOrder?: number;
+  stock: number;
+  warrantyText?: string;
   createdAt: string;
 
   images?: {
     id: string;
     imageUrl: string;
     isPrimary: boolean;
+  }[];
+
+  features?: {
+    id: string;
+    title: string;
+    description?: string;
+    displayOrder?: number;
+  }[];
+
+  specifications?: {
+    id: string;
+    name: string;
+    value: string;
+    displayOrder?: number;
   }[];
 }

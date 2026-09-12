@@ -141,6 +141,7 @@ model Product {
   reviewCountDisplay Int     @default(0)
   primaryColorAccent String?
   amazonButtonLabel  String?
+  warrantyText       String?
 
   features         ProductFeature[]
   specifications   ProductSpecification[]

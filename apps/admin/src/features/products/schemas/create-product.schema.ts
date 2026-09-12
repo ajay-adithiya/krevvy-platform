@@ -32,6 +32,8 @@ export const createProductSchema = z.object({
   primaryColorAccent: z.string().optional(),
   amazonButtonLabel: z.string().optional(),
   displayOrder: z.number().int().optional(),
+  stock: z.number().int().optional(),
+  warrantyText: z.string().optional(),
 });
 
 export type CreateProductFormValues = z.infer<

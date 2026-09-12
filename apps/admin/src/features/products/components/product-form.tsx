@@ -17,6 +17,8 @@ import { Category } from "@/features/categories/types/category.types";
 import { useUpdateProduct } from "../hooks/use-update-product";
 
 import { ProductImages } from "./product-images";
+import { ProductFeatures } from "./product-features";
+import { ProductSpecifications } from "./product-specifications";
 
 import { useCreateProduct } from "../hooks/use-create-product";
 import {
@@ -29,7 +31,7 @@ import { Product } from "../types/product.types";
 interface ProductFormProps {
   mode: "create" | "edit";
   product?: Product;
-  onSuccess: () => void;
+  onSuccess: (productId?: string) => void;
 }
 
 export function ProductForm({
@@ -72,6 +74,8 @@ export function ProductForm({
       primaryColorAccent: product?.primaryColorAccent ?? "",
       amazonButtonLabel: product?.amazonButtonLabel ?? "",
       displayOrder: product?.displayOrder ?? 0,
+      stock: product?.stock ?? 0,
+      warrantyText: product?.warrantyText ?? "",
     },
   });
 
@@ -92,9 +96,9 @@ export function ProductForm({
   const onSubmit = (values: CreateProductFormValues) => {
     if (mode === "create") {
       createProductMutation.mutate(values, {
-        onSuccess: () => {
+        onSuccess: (data) => {
           reset();
-          onSuccess();
+          onSuccess(data?.id);
         },
       });
 
@@ -249,6 +253,14 @@ export function ProductForm({
           <Label htmlFor="displayOrder">Display Order</Label>
           <Input id="displayOrder" type="number" {...register("displayOrder", { valueAsNumber: true })} />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="stock">Stock Available</Label>
+          <Input id="stock" type="number" {...register("stock", { valueAsNumber: true })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="warrantyText">Warranty Text (Optional)</Label>
+          <Input id="warrantyText" {...register("warrantyText")} placeholder="e.g. 6 Months" />
+        </div>
       </div>
 
       {/* Category */}
@@ -359,12 +371,22 @@ export function ProductForm({
         <ProductImages productId={product.id} />
       )}
 
+      {/* Product Features */}
+      {mode === "edit" && product && (
+        <ProductFeatures productId={product.id} features={product.features || []} />
+      )}
+
+      {/* Product Specifications */}
+      {mode === "edit" && product && (
+        <ProductSpecifications productId={product.id} specifications={product.specifications || []} />
+      )}
+
       {/* Footer */}
       <div className="flex justify-end gap-3 pt-2">
         <Button
           type="button"
           variant="outline"
-          onClick={onSuccess}
+          onClick={() => onSuccess()}
         >
           Cancel
         </Button>

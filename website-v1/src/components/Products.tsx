@@ -389,10 +389,10 @@ export default function Products({ onBuyProduct, searchQuery, setSearchQuery }: 
                               {content.inStockLabel}
                             </span>
                           )}
-                          {content?.warrantyLabel && (
+                          {(product.warrantyText || content?.warrantyLabel) && (
                             <span className="bg-amber-50 dark:bg-amber-950/30 text-copper dark:text-primary-fixed-dim text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border border-amber-100 dark:border-amber-900/30 flex items-center gap-1">
                               <Shield className="w-3 h-3" />
-                              {content.warrantyLabel}
+                              {product.warrantyText || content.warrantyLabel}
                             </span>
                           )}
                         </div>

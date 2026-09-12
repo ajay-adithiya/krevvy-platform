@@ -79,6 +79,7 @@ export class ProductService {
         reviewCountDisplay: createProductDto.reviewCountDisplay,
         primaryColorAccent: createProductDto.primaryColorAccent,
         amazonButtonLabel: createProductDto.amazonButtonLabel,
+        warrantyText: createProductDto.warrantyText,
       },
     });
 

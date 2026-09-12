@@ -88,4 +88,5 @@ export class CreateProductDto {
   @ApiProperty({ required: false }) @IsOptional() @IsNumber() reviewCountDisplay?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() primaryColorAccent?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() amazonButtonLabel?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() warrantyText?: string;
 }

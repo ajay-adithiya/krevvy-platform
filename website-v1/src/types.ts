@@ -32,6 +32,7 @@ export interface Product {
   features: ProductFeature[];
   specifications: ProductSpec[];
   amazonUrl: string;
+  warrantyText?: string;
 }
 
 export interface FaqItem {

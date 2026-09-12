@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import {
   useProductImages,
   useUploadProductImage,
+  useDeleteProductImage,
+  useSetPrimaryProductImage,
 } from "../hooks/use-product-images";
 import { ProductImage } from "../types/product-image";
+import { Trash2, Star } from "lucide-react";
 
 interface ProductImagesProps {
   productId: string;
@@ -24,6 +27,8 @@ export function ProductImages({
 
   const uploadMutation =
     useUploadProductImage(productId);
+  const deleteMutation = useDeleteProductImage(productId);
+  const primaryMutation = useSetPrimaryProductImage(productId);
 
   const fileInputRef =
     useRef<HTMLInputElement>(null);
@@ -93,6 +98,33 @@ export function ProductImages({
                     ? "⭐ Primary"
                     : "Image"}
                 </span>
+                <div className="flex gap-2">
+                  {!image.isPrimary && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => primaryMutation.mutate(image.id)}
+                      disabled={primaryMutation.isPending}
+                    >
+                      <Star className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-destructive"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this image?")) {
+                        deleteMutation.mutate(image.id);
+                      }
+                    }}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
