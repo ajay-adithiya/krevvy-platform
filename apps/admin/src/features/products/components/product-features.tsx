@@ -74,7 +74,7 @@ export function ProductFeatures({ productId, features = [] }: ProductFeaturesPro
     <div className="space-y-4 border-t pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Features</h3>
-        <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-2" /> Add Feature</Button>
+        <Button type="button" size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-2" /> Add Feature</Button>
       </div>
 
       {features.length === 0 ? (
@@ -88,10 +88,10 @@ export function ProductFeatures({ productId, features = [] }: ProductFeaturesPro
                 <p className="text-xs text-muted-foreground">{f.description}</p>
               </div>
               <div className="flex gap-2">
-                <Button size="icon-sm" variant="ghost" onClick={() => handleOpen(f)}>
+                <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleOpen(f)}>
                   <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button size="icon-sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(f.id)}>
+                <Button type="button" size="icon-sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(f.id)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -118,7 +118,7 @@ export function ProductFeatures({ productId, features = [] }: ProductFeaturesPro
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending}>Save</Button>
+            <Button type="button" onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

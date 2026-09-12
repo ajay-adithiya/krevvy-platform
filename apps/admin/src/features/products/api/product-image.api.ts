@@ -15,11 +15,6 @@ export async function uploadProductImage(
   const response = await api.post(
     `/products/${productId}/images`,
     formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
   );
 
   return response.data.data;

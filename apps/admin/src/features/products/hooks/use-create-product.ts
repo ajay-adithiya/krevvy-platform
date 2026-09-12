@@ -6,19 +6,23 @@ import {
   CreateProductDto,
 } from "../api/product.service";
 
-export function useCreateProduct() {
+export function useCreateProduct(onSuccessCb?: (productId: string) => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CreateProductDto) =>
       createProduct(data),
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ["products"],
       });
 
       toast.success("Product created successfully.");
+
+      if (onSuccessCb && data?.id) {
+        onSuccessCb(data.id);
+      }
     },
 
     onError: () => {

@@ -42,7 +42,10 @@ export function ProductForm({
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
 
-  const createProductMutation = useCreateProduct();
+  const createProductMutation = useCreateProduct((id) => {
+    reset();
+    onSuccess(id);
+  });
 
   const updateProductMutation = useUpdateProduct();
 
@@ -114,13 +117,7 @@ export function ProductForm({
     }
 
     if (mode === "create") {
-      createProductMutation.mutate(payload, {
-        onSuccess: (data) => {
-          reset();
-          onSuccess(data?.id);
-        },
-      });
-
+      createProductMutation.mutate(payload);
       return;
     }
 
