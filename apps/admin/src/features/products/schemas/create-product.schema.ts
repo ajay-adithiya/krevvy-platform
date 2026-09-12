@@ -27,11 +27,26 @@ export const createProductSchema = z.object({
   isNewArrival: z.boolean().optional(),
   isBestSeller: z.boolean().optional(),
   discountLabel: z.string().optional(),
-  ratingDisplay: z.string().optional(),
-  reviewCountDisplay: z.string().optional(),
+  ratingDisplay: z
+    .union([z.string(), z.number()])
+    .optional()
+    .refine((val) => val === "" || val === undefined || !isNaN(Number(val)), {
+      message: "Must be a valid number",
+    }),
+  reviewCountDisplay: z
+    .union([z.string(), z.number()])
+    .optional()
+    .refine(
+      (val) =>
+        val === "" ||
+        val === undefined ||
+        (!isNaN(Number(val)) && Number.isInteger(Number(val))),
+      {
+        message: "Must be a valid integer",
+      }
+    ),
   primaryColorAccent: z.string().optional(),
   amazonButtonLabel: z.string().optional(),
-  displayOrder: z.number().int().optional(),
   stock: z.number().int().optional(),
   warrantyText: z.string().optional(),
 });

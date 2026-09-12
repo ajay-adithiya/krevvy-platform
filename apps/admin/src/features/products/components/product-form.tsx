@@ -73,7 +73,6 @@ export function ProductForm({
       reviewCountDisplay: product?.reviewCountDisplay ?? "",
       primaryColorAccent: product?.primaryColorAccent ?? "",
       amazonButtonLabel: product?.amazonButtonLabel ?? "",
-      displayOrder: product?.displayOrder ?? 0,
       stock: product?.stock ?? 0,
       warrantyText: product?.warrantyText ?? "",
     },
@@ -94,8 +93,28 @@ export function ProductForm({
   const isBestSeller = watch("isBestSeller");
 
   const onSubmit = (values: CreateProductFormValues) => {
+    const payload: any = { ...values };
+
+    if (payload.amazonUrl === "") {
+      payload.amazonUrl = undefined;
+    } else if (typeof payload.amazonUrl === "string") {
+      payload.amazonUrl = payload.amazonUrl.trim();
+    }
+
+    if (payload.ratingDisplay === "") {
+      payload.ratingDisplay = undefined;
+    } else if (payload.ratingDisplay !== undefined && payload.ratingDisplay !== null) {
+      payload.ratingDisplay = Number(payload.ratingDisplay);
+    }
+
+    if (payload.reviewCountDisplay === "") {
+      payload.reviewCountDisplay = undefined;
+    } else if (payload.reviewCountDisplay !== undefined && payload.reviewCountDisplay !== null) {
+      payload.reviewCountDisplay = Number(payload.reviewCountDisplay);
+    }
+
     if (mode === "create") {
-      createProductMutation.mutate(values, {
+      createProductMutation.mutate(payload, {
         onSuccess: (data) => {
           reset();
           onSuccess(data?.id);
@@ -110,7 +129,7 @@ export function ProductForm({
     updateProductMutation.mutate(
       {
         productId: product.id,
-        data: values,
+        data: payload,
       },
       {
         onSuccess: () => {
@@ -248,10 +267,6 @@ export function ProductForm({
         <div className="space-y-2">
           <Label htmlFor="primaryColorAccent">Primary Color Accent</Label>
           <Input id="primaryColorAccent" {...register("primaryColorAccent")} placeholder="e.g. #ff0000" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="displayOrder">Display Order</Label>
-          <Input id="displayOrder" type="number" {...register("displayOrder", { valueAsNumber: true })} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="stock">Stock Available</Label>
